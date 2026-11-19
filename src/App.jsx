@@ -21,11 +21,35 @@ const CATS = [
   {id:"charity",ar:"جمعيات خيرية",icon:"🤲",color:"#10b981"},
   {id:"quran",ar:"مدارس قرآنية",icon:"📖",color:"#8b5cf6"},
 ];
-const AREAS=["كل الأحياء"];
+const AREAS=["كل الأحياء","المركز"];
 const SPECS=["all","طب عام","طب أطفال","طب الأسنان","أمراض النساء","قلب وأوعية","عيون","جلدية"];
 const TIMES=["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00"];
 const EMOJIS=["📦","🛒","👗","👔","👶","💍","💄","💊","🛋️","📱","🌸","🧴","👟","🍝","🌻","🥛","🫒","🎂","🍕","🧵","✂️","🍔","💅","🧃","🎁"];
 const GALLERY_EMOJIS=["📸","👗","💍","🎂","🍕","🧵","📱","💄","🛋️","👟","🍰","👜"];
+
+const INITIAL_SHOPS = [
+  {
+    id: 1,
+    name: "محل أم البواقي العصري",
+    category: "clothes_women",
+    phone: "0550000000",
+    desc: "أحدث موديلات الملابس النسائية والخياطة العصرية",
+    hours: "09:00 - 21:00",
+    days: "السبت - الخميس",
+    hasDelivery: true,
+    area: "المركز",
+    discount: 10,
+    offerText: "تخفيض افتتاحي",
+    distance: "1.2 كم",
+    rating: 4.8,
+    verified: true,
+    plan: "free",
+    onDuty: false,
+    products: [],
+    gallery: [],
+    reviews: [],
+  },
+];
 
 const G=(d)=>({
   bg:d?"#0f0f1a":"#f0f4f8",bg2:d?"#1a1a2e":"#fff",bg3:d?"#16213e":"#e8edf5",
@@ -111,7 +135,7 @@ function AddGalleryModal({onClose,onAddPhoto,g}){
   const[title,setTitle]=useState("");
   const[icon,setIcon]=useState("📸");
   return(
-    <Modal onClose={onClose} g={~g?undefined:g}>
+    <Modal onClose={onClose} g={g}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
         <div style={{fontSize:17,fontWeight:800,color:g.accent}}>📷 إضافة صورة لمعرض السلعة</div>
         <button onClick={onClose} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
@@ -502,7 +526,7 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,onChat,
         )}
       </div>
 
-      <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50% )",display:"flex",gap:8,width:"calc(100% - 40px)",maxWidth:360,zIndex:10}}>
+      <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",display:"flex",gap:8,width:"calc(100% - 40px)",maxWidth:360,zIndex:10}}>
         <button onClick={()=>setShowAdd(true)}
           style={{flex:1,background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:18,padding:"12px 10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:g.fn,boxShadow:"0 4px 20px #f0a50066"}}>
           ➕ أضف منتج
@@ -515,3 +539,135 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,onChat,
     </div>
   );
 }
+
+function App(){
+  const[dark,setDark]=useState(true);
+  const[shops,setShops]=useState(INITIAL_SHOPS);
+  const[selectedShopId,setSelectedShopId]=useState(null);
+  const[showReg,setShowReg]=useState(false);
+  const[showMsgs,setShowMsgs]=useState(false);
+  const[chatTarget,setChatTarget]=useState(null);
+  const[chats,setChats]=useState({});
+  const[favorites,setFavorites]=useState([]);
+  const[pts,setPts]=useState(0);
+  const[search,setSearch]=useState("");
+  const[catFilter,setCatFilter]=useState("all");
+
+  const g=G(dark);
+  const selectedShop=shops.find(s=>s.id===selectedShopId)||null;
+
+  const updateShop=(updated)=>setShops(prev=>prev.map(s=>s.id===updated.id?updated:s));
+  const toggleFav=(id)=>setFavorites(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
+  const openChat=(shop,initial="")=>setChatTarget({shop,initial});
+  const sendMsg=(shopId,text)=>setChats(prev=>({...prev,[shopId]:[...(prev[shopId]||[]),{id:Date.now(),from:"user",text}]}));
+
+  if(chatTarget){
+    return(
+      <div style={{maxWidth:430,margin:"0 auto"}}>
+        <ChatScreen
+          shop={chatTarget.shop}
+          msgs={chats[chatTarget.shop.id]||[]}
+          initial={chatTarget.initial}
+          onSend={(t)=>sendMsg(chatTarget.shop.id,t)}
+          onBack={()=>setChatTarget(null)}
+          g={g}
+        />
+      </div>
+    );
+  }
+
+  if(showMsgs){
+    return(
+      <MessagesScreen
+        onBack={()=>setShowMsgs(false)}
+        shops={shops}
+        chats={chats}
+        onOpen={(sh)=>{setShowMsgs(false);openChat(sh);}}
+        g={g}
+      />
+    );
+  }
+
+  if(selectedShop){
+    return(
+      <div style={{maxWidth:430,margin:"0 auto"}}>
+        <ShopDetail
+          shop={selectedShop}
+          onBack={()=>setSelectedShopId(null)}
+          onUpdate={updateShop}
+          onReport={()=>alert("تم إرسال البلاغ")}
+          g={g}
+          favorites={favorites}
+          toggleFav={toggleFav}
+          onChat={openChat}
+          addPts={(n)=>setPts(p=>p+n)}
+        />
+      </div>
+    );
+  }
+
+  const filtered=shops.filter(s=>{
+    const mCat=catFilter==="all"||s.category===catFilter;
+    const mQ=!search.trim()||s.name.toLowerCase().includes(search.trim().toLowerCase());
+    return mCat&&mQ;
+  });
+
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:"rtl",maxWidth:430,margin:"0 auto",paddingBottom:90}}>
+      {showReg&&<RegShopModal onClose={()=>setShowReg(false)} onReg={(sh)=>setShops(prev=>[sh,...prev])} g={g}/>}
+      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`,position:"sticky",top:0,zIndex:10}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div>
+            <div style={{fontSize:20,fontWeight:900,color:g.accent}}>DzShop</div>
+            <div style={{fontSize:12,color:g.t2}}>نقاطك: {pts} ⭐</div>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setShowMsgs(true)} style={{background:g.bg3,border:"none",borderRadius:12,padding:"8px 12px",color:g.text,cursor:"pointer",fontFamily:g.fn,fontSize:13}}>💬 الرسائل</button>
+            <button onClick={()=>setDark(d=>!d)} style={{background:g.bg3,border:"none",borderRadius:12,padding:"8px 12px",color:g.text,cursor:"pointer",fontSize:14}}>{dark?"☀️":"🌙"}</button>
+          </div>
+        </div>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث عن محل..."
+          style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:"10px 14px",color:g.text,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+      </div>
+
+      <div style={{display:"flex",gap:8,overflowX:"auto",padding:"12px 16px"}}>
+        <button onClick={()=>setCatFilter("all")}
+          style={{background:catFilter==="all"?g.accent:g.bg3,color:catFilter==="all"?"#fff":g.text,border:"none",borderRadius:14,padding:"6px 14px",cursor:"pointer",fontFamily:g.fn,fontSize:12,fontWeight:700,flexShrink:0}}>
+          الكل
+        </button>
+        {CATS.map(c=>(
+          <button key={c.id} onClick={()=>setCatFilter(c.id)}
+            style={{background:catFilter===c.id?g.accent:g.bg3,color:catFilter===c.id?"#fff":g.text,border:"none",borderRadius:14,padding:"6px 12px",cursor:"pointer",fontFamily:g.fn,fontSize:12,fontWeight:700,flexShrink:0}}>
+            {c.icon} {c.ar}
+          </button>
+        ))}
+      </div>
+
+      <div style={{padding:"4px 16px"}}>
+        {filtered.map(sh=>{
+          const cat=CATS.find(c=>c.id===sh.category);
+          return(
+            <div key={sh.id} onClick={()=>setSelectedShopId(sh.id)}
+              style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`,boxShadow:g.sh,cursor:"pointer",display:"flex",gap:12,alignItems:"center"}}>
+              <div style={{background:`${cat?.color}22`,borderRadius:14,width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0}}>
+                {cat?.icon||"🏪"}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:800,fontSize:15}}>{sh.name}</div>
+                <div style={{color:g.t2,fontSize:12,marginTop:2}}>{cat?.ar} • {sh.area||"—"}</div>
+              </div>
+              <div style={{color:g.accent,fontWeight:700,fontSize:13}}>⭐ {sh.rating||5}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button onClick={()=>setShowReg(true)}
+        style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:18,padding:"12px 24px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:g.fn,boxShadow:"0 4px 20px #f0a50066"}}>
+        + تسجيل محلك
+      </button>
+    </div>
+  );
+}
+
+export default App;
