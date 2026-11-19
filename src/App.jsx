@@ -42,7 +42,7 @@ const UI = {
     pharmaSub: "مفتوحة الآن",
     offers: "العروض",
     newToday: "الجديد اليوم",
-   withDelivery: "مع توصيل",
+    withDelivery: "مع توصيل",
     drivers: "الموصّلين",
     messages: "رسائلي",
     charity: "جمعيات خيرية",
@@ -60,12 +60,18 @@ const UI = {
     navOffers: "عروض",
     navFav: "مفضلة",
     navProfile: "حسابي",
+    shopsTab: "🏪 المحلات",
     postsTab: "📝 المنشورات",
     discountsTab: "🏷️ التخفيضات",
+    savedTab: "🔖 المحفوظات",
+    saveBtn: "حفظ",
+    savedBtn: "محفوظ",
+    likeBtn: "إعجاب",
     addPostBtn: "➕ أضف منشور",
     addDiscountBtn: "🏷️ أضف تخفيض",
-    noPosts: "ما كاين منشور بعد — اضغطي ➕",
-    noDiscounts: "ما كاين تخفيضات حالياً في هذا المحل",
+    noPosts: "ما كاين منشور بعد",
+    noDiscounts: "ما كاين تخفيضات حالياً",
+    noSaved: "ما حفظتِ حتى منتج بعد — اضغطي على 🔖 لحفظ أي منتج يعجبكِ",
     available: "✓ متوفر",
     unavailable: "✗ نافد",
     call: "📞 اتصل",
@@ -107,7 +113,6 @@ const UI = {
     pharmaSub: "Ouverte",
     offers: "Promotions",
     newToday: "Nouveautés",
-    compare: "Comparer prix",
     withDelivery: "Livraison dispo",
     drivers: "Livreurs",
     messages: "Messages",
@@ -126,12 +131,18 @@ const UI = {
     navOffers: "Promos",
     navFav: "Favoris",
     navProfile: "Profil",
+    shopsTab: "🏪 Boutiques",
     postsTab: "📝 Publications",
     discountsTab: "🏷️ Promotions",
+    savedTab: "🔖 Enregistrés",
+    saveBtn: "Enregistrer",
+    savedBtn: "Enregistré",
+    likeBtn: "J'aime",
     addPostBtn: "➕ Publier",
     addDiscountBtn: "🏷️ Ajouter promo",
-    noPosts: "Aucune publication — cliquez sur ➕",
-    noDiscounts: "Aucune promotion dans cette boutique",
+    noPosts: "Aucune publication pour le moment",
+    noDiscounts: "Aucune promotion disponible",
+    noSaved: "Aucun produit enregistré — cliquez sur 🔖 pour sauvegarder",
     available: "✓ Disponible",
     unavailable: "✗ Épuisé",
     call: "📞 Appeler",
@@ -360,7 +371,7 @@ function AddProductModal({onClose,onAdd,onSubscribePro,isPro,count,defaultDiscou
       <button onClick={()=>{
         if(!isPro && count>=FREE_POSTS_LIMIT){setShowUp(true);return;}
         if(!form.name||!form.price||!hasMedia)return;
-        onAdd({...form,price:Number(form.price),id:Date.now(),status:"pending",addedDate:today});
+        onAdd({...form,price:Number(form.price),id:Date.now(),status:"approved",addedDate:today,likes:0});
         onClose();
       }}
         style={{width:"100%",background:(!isPro&&count>=FREE_POSTS_LIMIT)?"#2a2a4a":"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
@@ -582,7 +593,7 @@ function DelivModal({shop,onClose,g}){
   );
 }
 
-function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,onChat,addPts,lang="ar"}){
+function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedProducts,toggleLikeProduct,savedProducts,toggleSaveProduct,onChat,addPts,lang="ar"}){
   const u=UI[lang]||UI.ar;
   const cat=CATS.find(c=>c.id===shop.category);
   const[products,setProducts]=useState(shop.products||[]);
@@ -605,35 +616,46 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,onChat,
   const addProdComment=(pid,c)=>{const uList=products.map(p=>p.id===pid?{...p,comments:[...(p.comments||[]),c]}:p);setProducts(uList);onUpdate({...shop,products:uList});};
   const isOpen=()=>{try{const[sh,eh]=shop.hours.split(" - ").map(x=>parseInt(x));const h=new Date().getHours();return h>=sh&&h<eh;}catch{return true;}};
 
-  const renderPostCard=(p)=>(
-    <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${g.border}`}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <div style={{background:g.bg,borderRadius:12,width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0}}>
-            {renderMediaPreview(p,52,(imgs)=>setGalleryImgs(imgs))}
-            {p.discount>0&&<div style={{position:"absolute",top:-4,right:-4,background:"#ff6b35",color:"#fff",fontSize:9,fontWeight:700,borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center"}}>-{p.discount}%</div>}
-          </div>
-          <div>
-            <div style={{fontWeight:700,fontSize:14}}>{p.name}</div>
-            {p.desc&&<div style={{color:g.t2,fontSize:11,marginTop:1}}>{p.desc}</div>}
-            <div style={{color:g.accent,fontSize:16,fontWeight:800,marginTop:3}}>
-              {p.discount>0?Math.round(p.price*(1-p.discount/100)).toLocaleString():p.price?.toLocaleString()} {u.da}
+  const renderPostCard=(p)=>{
+    const isLiked=likedProducts.includes(p.id);
+    const isSaved=savedProducts.includes(p.id);
+    const likeCount=(p.likes||0)+(isLiked?1:0);
+    return(
+      <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${g.border}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{background:g.bg,borderRadius:12,width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0}}>
+              {renderMediaPreview(p,56,(imgs)=>setGalleryImgs(imgs))}
+              {p.discount>0&&<div style={{position:"absolute",top:-4,right:-4,background:"#ff6b35",color:"#fff",fontSize:9,fontWeight:700,borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center"}}>-{p.discount}%</div>}
+            </div>
+            <div>
+              <div style={{fontWeight:700,fontSize:14}}>{p.name}</div>
+              {p.desc&&<div style={{color:g.t2,fontSize:11,marginTop:1}}>{p.desc}</div>}
+              <div style={{color:g.accent,fontSize:16,fontWeight:800,marginTop:3}}>
+                {p.discount>0?Math.round(p.price*(1-p.discount/100)).toLocaleString():p.price?.toLocaleString()} {u.da}
+              </div>
             </div>
           </div>
+          <div style={{background:p.available?"#00ff8822":"#ff444422",color:p.available?"#00ff88":"#ff4444",padding:"5px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>
+            {p.available?u.available:u.unavailable}
+          </div>
         </div>
-        <div style={{background:p.available?"#00ff8822":"#ff444422",color:p.available?"#00ff88":"#ff4444",padding:"5px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>
-          {p.available?u.available:u.unavailable}
+        {p.mediaType==="video"&&p.videoUrl&&(
+          <video src={p.videoUrl} controls playsInline style={{width:"100%",maxHeight:200,borderRadius:12,marginTop:10}}/>
+        )}
+        <div style={{display:"flex",gap:6,marginTop:12,paddingTop:10,borderTop:`1px solid ${g.border}44`,flexWrap:"wrap"}}>
+          <button onClick={()=>toggleLikeProduct(p.id)} style={{background:isLiked?"#ff444422":g.bg3,border:isLiked?"1px solid #ff4444":"none",borderRadius:12,padding:"8px 10px",color:isLiked?"#ff4444":g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            {isLiked?"❤️":"🤍"} {likeCount}
+          </button>
+          <button onClick={()=>toggleSaveProduct(p.id)} style={{background:isSaved?"#f0a50022":g.bg3,border:isSaved?"1px solid #f0a500":"none",borderRadius:12,padding:"8px 10px",color:isSaved?g.accent:g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            🔖 {isSaved?u.savedBtn:u.saveBtn}
+          </button>
+          <button onClick={()=>setCommProd(p.id)} style={{flex:1,background:g.bg3,border:"none",borderRadius:12,padding:"8px",color:g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>💬 ({(p.comments||[]).length})</button>
+          <button onClick={()=>onChat(shop,`السلام عليكم، نحب نسأل على: ${p.name}`)} style={{flex:1,background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"8px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.askShop}</button>
         </div>
       </div>
-      {p.mediaType==="video"&&p.videoUrl&&(
-        <video src={p.videoUrl} controls playsInline style={{width:"100%",maxHeight:200,borderRadius:12,marginTop:10}}/>
-      )}
-      <div style={{display:"flex",gap:8,marginTop:12,paddingTop:10,borderTop:`1px solid ${g.border}44`}}>
-        <button onClick={()=>setCommProd(p.id)} style={{flex:1,background:g.bg3,border:"none",borderRadius:12,padding:"8px",color:g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.comments} ({(p.comments||[]).length})</button>
-        <button onClick={()=>onChat(shop,`السلام عليكم، نحب نسأل على: ${p.name}`)} style={{flex:1,background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"8px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.askShop}</button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
@@ -750,11 +772,13 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,onChat,
   );
 }
 
-function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,lang="ar"}){
+function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,likedProducts,toggleLikeProduct,savedProducts,toggleSaveProduct,onChat,lang="ar"}){
   const u=UI[lang]||UI.ar;
   const cat=CATS.find(c=>c.id===catId);
   const[area,setArea]=useState("ALL");
   const[fDeliv,setFDeliv]=useState(false);
+  const[catTab,setCatTab]=useState("posts"); // posts | discounts | shops
+  const[galleryImgs,setGalleryImgs]=useState(null);
 
   const catShops=shops.filter(s=>s.category===catId);
   const dynamicAreas=Array.from(new Set(catShops.map(s=>(s.area||"").trim()).filter(Boolean)));
@@ -763,8 +787,82 @@ function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,lang="ar"}
   if(area!=="ALL")list=list.filter(s=>(s.area||"").trim()===area);
   if(fDeliv)list=list.filter(s=>s.hasDelivery);
 
+  const allCatPosts=list.flatMap(sh=>
+    (sh.products||[])
+      .filter(p=>!p.status||p.status==="approved")
+      .map(p=>({...p,shop:sh}))
+  );
+  const discountedCatPosts=allCatPosts.filter(p=>Number(p.discount)>0);
+
+  const renderCategoryPost=(p)=>{
+    const isLiked=likedProducts.includes(p.id);
+    const isSaved=savedProducts.includes(p.id);
+    const likeCount=(p.likes||0)+(isLiked?1:0);
+    return(
+      <div key={p.id} style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${g.border}`,boxShadow:g.sh}}>
+        <div onClick={()=>onSelect(p.shop)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,cursor:"pointer"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:18}}>{cat?.icon}</span>
+            <div>
+              <div style={{fontWeight:800,fontSize:13}}>{p.shop.name}</div>
+              <div style={{fontSize:11,color:g.t2}}>📍 {p.shop.area||"—"}</div>
+            </div>
+          </div>
+          <span style={{fontSize:11,color:g.accent,fontWeight:700}}>{lang==="fr"?"Voir boutique ›":"زيارة المحل ‹"}</span>
+        </div>
+
+        <div style={{display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{background:g.bg,borderRadius:14,width:68,height:68,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0}}>
+            {renderMediaPreview(p,68,(imgs)=>setGalleryImgs(imgs))}
+            {p.discount>0&&<div style={{position:"absolute",top:-4,right:-4,background:"#ff6b35",color:"#fff",fontSize:10,fontWeight:800,borderRadius:10,padding:"2px 6px"}}>-{p.discount}%</div>}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:800,fontSize:15}}>{p.name}</div>
+            {p.desc&&<div style={{color:g.t2,fontSize:12,marginTop:2}}>{p.desc}</div>}
+            <div style={{display:"flex",alignItems:"center",gap:8,marginTop:4}}>
+              <span style={{color:g.accent,fontSize:16,fontWeight:900}}>
+                {p.discount>0?Math.round(p.price*(1-p.discount/100)).toLocaleString():p.price?.toLocaleString()} {u.da}
+              </span>
+              {p.discount>0&&<span style={{textDecoration:"line-through",color:g.t2,fontSize:12}}>{p.price?.toLocaleString()} {u.da}</span>}
+            </div>
+          </div>
+        </div>
+
+        {p.mediaType==="video"&&p.videoUrl&&(
+          <video src={p.videoUrl} controls playsInline style={{width:"100%",maxHeight:200,borderRadius:12,marginTop:10}}/>
+        )}
+
+        <div style={{display:"flex",gap:8,marginTop:12,paddingTop:10,borderTop:`1px solid ${g.border}44`}}>
+          <button onClick={()=>toggleLikeProduct(p.id)} style={{background:isLiked?"#ff444422":g.bg3,border:isLiked?"1px solid #ff4444":"none",borderRadius:12,padding:"8px 12px",color:isLiked?"#ff4444":g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            {isLiked?"❤️":"🤍"} {likeCount}
+          </button>
+          <button onClick={()=>toggleSaveProduct(p.id)} style={{background:isSaved?"#f0a50022":g.bg3,border:isSaved?"1px solid #f0a500":"none",borderRadius:12,padding:"8px 12px",color:isSaved?g.accent:g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            🔖 {isSaved?u.savedBtn:u.saveBtn}
+          </button>
+          <button onClick={()=>onChat(p.shop,`السلام عليكم، نحب نسأل على: ${p.name}`)} style={{flex:1,background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"8px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            {u.askShop}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      {galleryImgs&&(
+        <div onClick={()=>setGalleryImgs(null)} style={{position:"fixed",inset:0,background:"#000d",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:g.card,borderRadius:20,padding:16,maxWidth:420,width:"100%",maxHeight:"85vh",overflowY:"auto",border:`1px solid ${g.border}`}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+              <span style={{fontWeight:800}}>📷 ({galleryImgs.length})</span>
+              <button onClick={()=>setGalleryImgs(null)} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer"}}>✕</button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {galleryImgs.map((src,idx)=><img key={idx} src={src} alt="" style={{width:"100%",height:140,objectFit:"cover",borderRadius:12}}/>)}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{background:`linear-gradient(160deg,${cat?.color}44,${g.bg2})`,padding:"16px 16px 0",borderBottom:`1px solid ${g.border}`}}>
         <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>{u.back}</button>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8}}>
@@ -774,7 +872,7 @@ function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,lang="ar"}
             {u.delivery}
           </button>
         </div>
-        <div style={{display:"flex",gap:6,overflowX:"auto",padding:"10px 0 14px",scrollbarWidth:"none"}}>
+        <div style={{display:"flex",gap:6,overflowX:"auto",padding:"10px 0 10px",scrollbarWidth:"none"}}>
           <button onClick={()=>setArea("ALL")}
             style={{background:area==="ALL"?`linear-gradient(135deg,${cat?.color},${cat?.color}aa)`:g.bg3,border:"none",borderRadius:20,padding:"6px 12px",color:g.text,fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontFamily:g.fn,fontWeight:area==="ALL"?700:400}}>
             {u.allAreas}
@@ -786,28 +884,57 @@ function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,lang="ar"}
             </button>
           ))}
         </div>
+
+        {/* تبويبات القسم: المنشورات | التخفيضات | المحلات */}
+        <div style={{display:"flex",borderTop:`1px solid ${g.border}`}}>
+          {[
+            ["posts",`${u.postsTab} (${allCatPosts.length})`],
+            ["discounts",`${u.discountsTab} (${discountedCatPosts.length})`],
+            ["shops",`${u.shopsTab} (${list.length})`],
+          ].map(([id,lbl])=>(
+            <button key={id} onClick={()=>setCatTab(id)}
+              style={{flex:1,background:"none",border:"none",color:catTab===id?g.accent:g.t2,fontSize:12,padding:"11px 4px",cursor:"pointer",fontFamily:g.fn,fontWeight:700,borderBottom:catTab===id?`2px solid ${g.accent}`:"2px solid transparent"}}>
+              {lbl}
+            </button>
+          ))}
+        </div>
       </div>
+
       <div style={{padding:"14px 14px 40px"}}>
-        {list.length===0?
-          <div style={{textAlign:"center",padding:"60px 20px",color:g.t2}}><div style={{fontSize:56,marginBottom:12}}>{cat?.icon}</div><div style={{fontSize:16}}>{lang==="fr"?"Aucune boutique ici":"ما كاين محل بعد"}</div></div>
-        :list.map(shop=>(
-          <div key={shop.id} onClick={()=>onSelect(shop)}
-            style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${shop.plan==="premium"?"#f0a50033":g.border}`,cursor:"pointer",boxShadow:g.sh}}>
-            <div style={{display:"flex",gap:12,alignItems:"center"}}>
-              <div style={{background:`${cat?.color}22`,borderRadius:14,width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{cat?.icon}</div>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",alignItems:"center",gap:6}}>
-                  <span style={{fontWeight:800}}>{shop.name}</span>
-                  {shop.verified&&<span style={{color:"#00ff88",fontSize:12}}>✅</span>}
-                  {shop.hasDelivery&&<span style={{fontSize:11,color:"#06b6d4"}}>🛵</span>}
+        {catTab==="posts"&&(
+          allCatPosts.length===0
+            ? <div style={{textAlign:"center",padding:"60px 20px",color:g.t2}}><div style={{fontSize:52,marginBottom:12}}>📝</div><div>{u.noPosts}</div></div>
+            : allCatPosts.map(renderCategoryPost)
+        )}
+
+        {catTab==="discounts"&&(
+          discountedCatPosts.length===0
+            ? <div style={{textAlign:"center",padding:"60px 20px",color:g.t2}}><div style={{fontSize:52,marginBottom:12}}>🏷️</div><div>{u.noDiscounts}</div></div>
+            : discountedCatPosts.map(renderCategoryPost)
+        )}
+
+        {catTab==="shops"&&(
+          list.length===0
+            ? <div style={{textAlign:"center",padding:"60px 20px",color:g.t2}}><div style={{fontSize:56,marginBottom:12}}>{cat?.icon}</div><div style={{fontSize:16}}>{lang==="fr"?"Aucune boutique ici":"ما كاين محل بعد"}</div></div>
+            : list.map(shop=>(
+              <div key={shop.id} onClick={()=>onSelect(shop)}
+                style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${shop.plan==="premium"?"#f0a50033":g.border}`,cursor:"pointer",boxShadow:g.sh}}>
+                <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                  <div style={{background:`${cat?.color}22`,borderRadius:14,width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{cat?.icon}</div>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{fontWeight:800}}>{shop.name}</span>
+                      {shop.verified&&<span style={{color:"#00ff88",fontSize:12}}>✅</span>}
+                      {shop.hasDelivery&&<span style={{fontSize:11,color:"#06b6d4"}}>🛵</span>}
+                    </div>
+                    <div style={{color:g.t2,fontSize:12,marginTop:2}}>📍 {shop.area||"—"} • ⭐ {shop.reviews?.length?(shop.reviews.reduce((a,r)=>a+r.stars,0)/shop.reviews.length).toFixed(1):shop.rating}</div>
+                    <div style={{fontSize:11,color:g.t2,marginTop:2}}>⏰ {shop.hours} • {shop.products.filter(p=>!p.status||p.status==="approved").length}</div>
+                  </div>
+                  <button onClick={e=>{e.stopPropagation();toggleFav(shop.id);}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer"}}>{favorites.includes(shop.id)?"❤️":"🤍"}</button>
                 </div>
-                <div style={{color:g.t2,fontSize:12,marginTop:2}}>📍 {shop.area||"—"} • ⭐ {shop.reviews?.length?(shop.reviews.reduce((a,r)=>a+r.stars,0)/shop.reviews.length).toFixed(1):shop.rating}</div>
-                <div style={{fontSize:11,color:g.t2,marginTop:2}}>⏰ {shop.hours} • {shop.products.filter(p=>!p.status||p.status==="approved").length}</div>
               </div>
-              <button onClick={e=>{e.stopPropagation();toggleFav(shop.id);}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer"}}>{favorites.includes(shop.id)?"❤️":"🤍"}</button>
-            </div>
-          </div>
-        ))}
+            ))
+        )}
       </div>
     </div>
   );
@@ -997,29 +1124,6 @@ function OffersScreen({onBack,shops,g,lang="ar"}){
   );
 }
 
-function CompareScreen({onBack,shops,g}){
-  const[q,setQ]=useState("");
-  const results=q.length>=2?shops.flatMap(s=>s.products.filter(p=>p.name.includes(q)&&(!p.status||p.status==="approved")).map(p=>({...p,shopName:s.name,shopPhone:s.phone,shopCat:s.category}))).sort((a,b)=>a.price-b.price):[];
-  return(
-    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
-      <div style={{background:`linear-gradient(135deg,#a78bfa33,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
-        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
-        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>💰 مقارنة الأسعار</div>
-        <input placeholder="ابحثي عن منتج..." value={q} onChange={e=>setQ(e.target.value)}
-          style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:14,padding:"10px 16px",color:g.text,fontFamily:g.fn,fontSize:14,boxSizing:"border-box",marginTop:12}}/>
-      </div>
-      <div style={{padding:"14px 14px 40px"}}>
-        {results.map((p,i)=>(
-          <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${i===0?"#00ff8844":g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div><div style={{fontWeight:700}}>{p.name}</div><div style={{color:g.t2,fontSize:12}}>{p.shopName}</div></div>
-            <div style={{fontSize:17,fontWeight:900,color:i===0?"#00ff88":g.accent}}>{p.price?.toLocaleString()} دج</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function NewScreen({onBack,shops,onSelect,g}){
   const today=new Date().toDateString();
   const newS=shops.filter(s=>s.addedDate===today);
@@ -1041,21 +1145,59 @@ function NewScreen({onBack,shops,onSelect,g}){
   );
 }
 
-function FavScreen({onBack,shops,favorites,onSelect,g,toggleFav}){
-  const fav=shops.filter(s=>favorites.includes(s.id));
+function FavScreen({onBack,shops,favorites,savedProducts,toggleSaveProduct,onSelect,g,toggleFav,lang="ar"}){
+  const u=UI[lang]||UI.ar;
+  const[favTab,setFavTab]=useState("saved"); // saved | shops
+  const favShops=shops.filter(s=>favorites.includes(s.id));
+  const savedItems=shops.flatMap(s=>
+    (s.products||[])
+      .filter(p=>savedProducts.includes(p.id))
+      .map(p=>({...p,shop:s}))
+  );
+
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
-      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
-        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
-        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>❤️ المفضلة ({fav.length})</div>
+      <div style={{background:g.card,padding:"16px 16px 0",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>{u.back}</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>❤️ {u.navFav}</div>
+        <div style={{display:"flex",marginTop:10}}>
+          {[
+            ["saved",`${u.savedTab} (${savedItems.length})`],
+            ["shops",`${u.shopsTab} (${favShops.length})`],
+          ].map(([id,lbl])=>(
+            <button key={id} onClick={()=>setFavTab(id)}
+              style={{flex:1,background:"none",border:"none",color:favTab===id?g.accent:g.t2,fontSize:13,padding:"11px",cursor:"pointer",fontFamily:g.fn,fontWeight:700,borderBottom:favTab===id?`2px solid ${g.accent}`:"2px solid transparent"}}>
+              {lbl}
+            </button>
+          ))}
+        </div>
       </div>
+
       <div style={{padding:"14px 14px 40px"}}>
-        {fav.map(shop=>(
-          <div key={shop.id} style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div onClick={()=>onSelect(shop)} style={{flex:1,cursor:"pointer",fontWeight:800}}>{shop.name}</div>
-            <button onClick={()=>toggleFav(shop.id)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer"}}>❤️</button>
-          </div>
-        ))}
+        {favTab==="saved"&&(
+          savedItems.length===0
+            ? <div style={{textAlign:"center",padding:"50px 20px",color:g.t2}}><div style={{fontSize:48,marginBottom:12}}>🔖</div><div>{u.noSaved}</div></div>
+            : savedItems.map(p=>(
+              <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`,display:"flex",gap:12,alignItems:"center"}}>
+                {renderMediaPreview(p,54)}
+                <div onClick={()=>onSelect(p.shop)} style={{flex:1,cursor:"pointer"}}>
+                  <div style={{fontWeight:800,fontSize:14}}>{p.name}</div>
+                  <div style={{fontSize:12,color:g.t2}}>{p.shop.name} • 📍 {p.shop.area}</div>
+                  <div style={{fontSize:15,fontWeight:800,color:g.accent,marginTop:3}}>{p.price?.toLocaleString()} {u.da}</div>
+                </div>
+                <button onClick={()=>toggleSaveProduct(p.id)} style={{background:"#f0a50022",border:"1px solid #f0a500",borderRadius:10,padding:"6px 10px",color:g.accent,fontSize:12,fontWeight:700,cursor:"pointer"}}>🔖</button>
+              </div>
+            ))
+        )}
+
+        {favTab==="shops"&&(
+          favShops.map(shop=>(
+            <div key={shop.id} style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div onClick={()=>onSelect(shop)} style={{flex:1,cursor:"pointer",fontWeight:800}}>{shop.name}</div>
+              <button onClick={()=>toggleFav(shop.id)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer"}}>❤️</button>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -1084,7 +1226,7 @@ function AdminScreen({onBack,shops,onApprove,onReject,reports,g}){
   );
 }
 
-function ProfileScreen({onBack,shops,favorites,points,g}){
+function ProfileScreen({onBack,shops,favorites,savedProducts,points,g}){
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
       <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
@@ -1095,6 +1237,7 @@ function ProfileScreen({onBack,shops,favorites,points,g}){
         <div style={{background:g.card,borderRadius:16,padding:16,border:`1px solid ${g.border}`}}>
           <div>🏪 {shops.length}</div>
           <div style={{marginTop:8}}>❤️ {favorites.length}</div>
+          <div style={{marginTop:8}}>🔖 {savedProducts.length}</div>
         </div>
       </div>
     </div>
@@ -1298,6 +1441,8 @@ export default function DzShop(){
   const[doctors,setDoctors]=useState([]);
   const[drivers,setDrivers]=useState([]);
   const[favorites,setFavorites]=useState([]);
+  const[likedProducts,setLikedProducts]=useState([]);
+  const[savedProducts,setSavedProducts]=useState([]);
   const[reports,setReports]=useState([]);
   const[points,setPoints]=useState(0);
 
@@ -1312,6 +1457,8 @@ export default function DzShop(){
     setTimeout(()=>setChats(c=>({...c,[sid]:[...(c[sid]||[]),{id:Date.now(),from:"shop",text:"شكراً! سنرد قريباً 🙏"}]})),1000);
   };
   const toggleFav=id=>setFavorites(p=>p.includes(id)?p.filter(f=>f!==id):[...p,id]);
+  const toggleLikeProduct=id=>setLikedProducts(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+  const toggleSaveProduct=id=>setSavedProducts(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
   const addReport=id=>setReports(p=>[...p,id]);
   const addPts=n=>setPoints(p=>p+n);
   const updShop=uShop=>{setShops(s=>s.map(sh=>sh.id===uShop.id?uShop:sh));if(selShop?.id===uShop.id)setSelShop(uShop);};
@@ -1346,7 +1493,7 @@ export default function DzShop(){
   const pendCnt=shops.reduce((a,s)=>a+s.products.filter(p=>p.status==="pending").length,0);
 
   if(chatShop)return <ChatScreen key={chatShop.id} shop={chatShop} msgs={chats[chatShop.id]||[]} initial={chatInit} onSend={txt=>sendChat(chatShop.id,txt)} onBack={()=>{setChatShop(null);setChatInit("");}} g={g}/>;
-  if(selShop)return <ShopDetail shop={selShop} onBack={()=>setSelShop(null)} onUpdate={updShop} onReport={addReport} g={g} favorites={favorites} toggleFav={toggleFav} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} addPts={addPts} lang={lang}/>;
+  if(selShop)return <ShopDetail shop={selShop} onBack={()=>setSelShop(null)} onUpdate={updShop} onReport={addReport} g={g} favorites={favorites} toggleFav={toggleFav} likedProducts={likedProducts} toggleLikeProduct={toggleLikeProduct} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} addPts={addPts} lang={lang}/>;
   if(screen==="messages")return <MessagesScreen onBack={()=>setScreen("home")} shops={shops} chats={chats} onOpen={sh=>{setChatInit("");setChatShop(sh);}} g={g}/>;
   if(screen==="realestate")return <REScreen onBack={()=>setScreen("home")} g={g}/>;
   if(screen==="doctor")return <DoctorScreen onBack={()=>setScreen("home")} doctors={doctors} onAdd={d=>setDoctors([...doctors,d])} g={g}/>;
@@ -1354,14 +1501,13 @@ export default function DzShop(){
   if(screen==="charity")return <CharityScreen onBack={()=>setScreen("home")} g={g}/>;
   if(screen==="delivery")return <DeliveryScreen onBack={()=>setScreen("home")} drivers={drivers} onAdd={d=>setDrivers([d,...drivers])} onToggle={id=>setDrivers(ds=>ds.map(x=>x.id===id?{...x,available:!x.available}:x))} g={g}/>;
   if(screen==="quran")return <QuranScreen onBack={()=>setScreen("home")} g={g}/>;
-  if(screen==="category"&&selCat)return <CatScreen catId={selCat} onBack={()=>{setScreen("home");setSelCat(null);}} shops={shops} onSelect={s=>setSelShop(s)} g={g} favorites={favorites} toggleFav={toggleFav} lang={lang}/>;
-  if(screen==="settings")return <SettingsScreen onBack={()=>setScreen("home")} dark={dark} setDark={setDark} lang={lang} setLang={setLang} g={g} onDelete={()=>{setShops([]);setDoctors([]);setDrivers([]);setChats({});setScanPreview("");setScreen("home");}}/>;
+  if(screen==="category"&&selCat)return <CatScreen catId={selCat} onBack={()=>{setScreen("home");setSelCat(null);}} shops={shops} onSelect={s=>setSelShop(s)} g={g} favorites={favorites} toggleFav={toggleFav} likedProducts={likedProducts} toggleLikeProduct={toggleLikeProduct} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} lang={lang}/>;
+  if(screen==="settings")return <SettingsScreen onBack={()=>setScreen("home")} dark={dark} setDark={setDark} lang={lang} setLang={setLang} g={g} onDelete={()=>{setShops([]);setDoctors([]);setDrivers([]);setChats({});setSavedProducts([]);setLikedProducts([]);setScanPreview("");setScreen("home");}}/>;
   if(screen==="admin")return <AdminScreen onBack={()=>setScreen("home")} shops={shops} onApprove={approveP} onReject={rejectP} reports={reports} g={g}/>;
-  if(screen==="favorites")return <FavScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} onSelect={s=>setSelShop(s)} g={g} toggleFav={toggleFav}/>;
+  if(screen==="favorites")return <FavScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onSelect={s=>setSelShop(s)} g={g} toggleFav={toggleFav} lang={lang}/>;
   if(screen==="offers")return <OffersScreen onBack={()=>setScreen("home")} shops={shops} g={g} lang={lang}/>;
-  if(screen==="compare")return <CompareScreen onBack={()=>setScreen("home")} shops={shops} g={g}/>;
   if(screen==="new")return <NewScreen onBack={()=>setScreen("home")} shops={shops} onSelect={s=>setSelShop(s)} g={g}/>;
-  if(screen==="profile")return <ProfileScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} points={points} g={g}/>;
+  if(screen==="profile")return <ProfileScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} savedProducts={savedProducts} points={points} g={g}/>;
 
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,maxWidth:430,margin:"0 auto",transition:"all 0.3s"}}>
@@ -1441,7 +1587,6 @@ export default function DzShop(){
             {[
               {icon:"🏷️",label:u.offers,action:()=>setScreen("offers"),c:"#ff6b35"},
               {icon:"🆕",label:u.newToday,action:()=>setScreen("new"),c:"#00ff88"},
-              {icon:"💰",label:u.compare,action:()=>setScreen("compare"),c:"#a78bfa"},
               {icon:"🛵",label:u.withDelivery,action:()=>{setSelCat("restaurant");setScreen("category");},c:"#06b6d4"},
               {icon:"🏍️",label:u.drivers,action:()=>setScreen("delivery"),c:"#0ea5e9"},
               {icon:"💬",label:u.messages,action:()=>setScreen("messages"),c:"#f0a500"},
@@ -1485,7 +1630,7 @@ export default function DzShop(){
           </div>
 
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
-            {[{l:u.statShops,v:shops.length,ic:"🏪",c:g.accent},{l:u.statDoctors,v:doctors.length,ic:"🩺",c:"#06b6d4"},{l:u.statFavs,v:favorites.length,ic:"❤️",c:"#f472b6"},{l:u.statPts,v:points,ic:"🏆",c:"#fbbf24"}].map((s,i)=>(
+            {[{l:u.statShops,v:shops.length,ic:"🏪",c:g.accent},{l:u.statDoctors,v:doctors.length,ic:"🩺",c:"#06b6d4"},{l:u.statFavs,v:favorites.length+savedProducts.length,ic:"❤️",c:"#f472b6"},{l:u.statPts,v:points,ic:"🏆",c:"#fbbf24"}].map((s,i)=>(
               <div key={i} style={{background:g.card,borderRadius:12,padding:"10px 4px",textAlign:"center",border:`1px solid ${g.border}`}}>
                 <div style={{fontSize:18}}>{s.ic}</div>
                 <div style={{fontSize:17,fontWeight:800,color:s.c}}>{s.v}</div>
