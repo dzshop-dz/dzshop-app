@@ -1,150 +1,162 @@
-import React, { useState, useEffect } from "react";
-
-const TRANSLATIONS = {
-  ar: {
-    appName: "متجر دي زد",
-    ratingLabel: "تقييمك:",
-    promotions: "التخفيضات",
-    searchPlaceholder: "ابحث عن المتاجر أو المنتجات...",
-    all: "الكل",
-    supermarket: "سوبرماركت",
-    restaurants: "مطاعم",
-    clothes: "ملابس",
-    barber: "حلاقة الرجال",
-    addPlace: "+ أضف محلك",
-    registerShopTitle: "تسجيل محلك",
-    freeBanner: "أول 10 منشورات مجانية تماماً",
-    shopName: "اسم المحل *",
-    phone: "رقم الهاتف *",
-    description: "وصف المحل",
-    hours: "أوقات العمل (مثال: 09:00 - 21:00)",
-    days: "أيام العمل (مثال: السبت - الخميس)",
-    area: "المنطقة (عين فكرون، أم البواقي، عين البيضاء، عين مليلة)",
-    offerText: "نص العرض الترويجي (اختياري)",
-    saveShop: "حفظ وتسجيل المحل",
-    call: "اتصال",
-    orderDelivery: "طلب توصيل",
-    postsTab: "المنشورات",
-    discountsTab: "التخفيضات",
-    reviewsTab: "التقييمات",
-    noPosts: "لا توجد منشورات بعد — اضغطي + لإضافة منشور",
-    noDiscounts: "لا توجد تخفيضات حالياً في هذا المحل",
-    noReviews: "لا توجد تقييمات بعد",
-    addPostBtn: "+ أضف منشور",
-    addDiscountBtn: "+ أضف تخفيض",
-    addPostTitle: "إضافة منشور جديد",
-    uploadMediaHint: "اختاري حتى 10 صور أو فيديو من معرض الجهاز *",
-    selectImages: "اختيار صور (حتى 10)",
-    selectVideo: "اختيار فيديو",
-    max10Alert: "يمكنكِ إضافة 10 صور كحد أقصى في المنشور الواحد.",
-    postTitle: "عنوان المنشور / المنتج *",
-    price: "السعر (دج) *",
-    shortDesc: "وصف قصير",
-    discountPercent: "نسبة التخفيض % (اختياري)",
-    availableNow: "متوفر الآن",
-    unavailable: "غير متوفر",
-    freeCounter: "منشورات مجانية مستخدمة",
-    publishPost: "نشر المنشور",
-    limitReachedTitle: "انتهت الباقة المجانية (10 منشورات)",
-    limitReachedDesc:
-      "لقد نشرتِ 10 منشورات مجانية. للاستمرار في نشر المزيد من المنتجات والعروض، يرجى تفعيل الاشتراك الشهري للتجار.",
-    activatePro: "تفعيل الاشتراك الشهري (1000 دج / شهر)",
-    close: "إغلاق",
-    rateShop: "أضيفي تقييمك للمحل",
-    reviewComment: "اكتبي رأيك في المحل...",
-    sendReview: "إرسال التقييم",
-    back: "رجوع",
-    da: "دج",
-    off: "تخفيض",
-    photosCount: "صور",
-    videoBadge: "فيديو",
-    deliveryMsg: "تم إرسال طلب التوصيل للمحل، سيتصل بكِ قريباً!",
-    proActivated: "تم تفعيل الاشتراك بنجاح! يمكنكِ الآن النشر بلا حدود.",
-    fillRequired: "يرجى ملء الحقول الإجبارية وإرفاق صورة أو فيديو.",
-  },
-  fr: {
-    appName: "DZ Shop",
-    ratingLabel: "Votre note :",
-    promotions: "Promotions",
-    searchPlaceholder: "Rechercher des boutiques ou produits...",
-    all: "Tout",
-    supermarket: "Supermarché",
-    restaurants: "Restaurants",
-    clothes: "Vêtements",
-    barber: "Coiffure hommes",
-    addPlace: "+ Ajouter votre lieu",
-    registerShopTitle: "Inscrire votre boutique",
-    freeBanner: "Les 10 premières publications sont gratuites",
-    shopName: "Nom de la boutique *",
-    phone: "Numéro de téléphone *",
-    description: "Description de la boutique",
-    hours: "Horaires (ex: 09:00 - 21:00)",
-    days: "Jours d'ouverture (ex: Samedi - Jeudi)",
-    area: "Ville / Quartier (Aïn Fakroun, OEB, Aïn Beïda, Aïn M'lila)",
-    offerText: "Texte de l'offre (optionnel)",
-    saveShop: "Enregistrer la boutique",
-    call: "Appeler",
-    orderDelivery: "Commander livraison",
-    postsTab: "Publications",
-    discountsTab: "Promotions",
-    reviewsTab: "Avis",
-    noPosts: "Aucune publication — cliquez sur + pour publier",
-    noDiscounts: "Aucune promotion disponible pour le moment",
-    noReviews: "Aucun avis pour le moment",
-    addPostBtn: "+ Publier",
-    addDiscountBtn: "+ Ajouter promo",
-    addPostTitle: "Nouvelle publication",
-    uploadMediaHint: "Choisissez jusqu'à 10 photos ou une vidéo *",
-    selectImages: "Choisir des photos (max 10)",
-    selectVideo: "Choisir une vidéo",
-    max10Alert: "Maximum 10 photos par publication.",
-    postTitle: "Titre du produit / publication *",
-    price: "Prix (DA) *",
-    shortDesc: "Description courte",
-    discountPercent: "Réduction % (optionnel)",
-    availableNow: "Disponible",
-    unavailable: "Indisponible",
-    freeCounter: "publications gratuites utilisées",
-    publishPost: "Publier maintenant",
-    limitReachedTitle: "Limite gratuite atteinte (10 publications)",
-    limitReachedDesc:
-      "Vous avez utilisé vos 10 publications gratuites. Passez à l'abonnement commerçant pour publier en illimité.",
-    activatePro: "Activer l'abonnement (1000 DA / mois)",
-    close: "Fermer",
-    rateShop: "Noter cette boutique",
-    reviewComment: "Votre avis sur la boutique...",
-    sendReview: "Envoyer l'avis",
-    back: "Retour",
-    da: "DA",
-    off: "Promo",
-    photosCount: "photos",
-    videoBadge: "Vidéo",
-    deliveryMsg: "Demande de livraison envoyée à la boutique !",
-    proActivated: "Abonnement activé ! Publications illimitées débloquées.",
-    fillRequired: "Veuillez remplir les champs obligatoires et ajouter un média.",
-  },
-};
+import { useState, useRef, useEffect } from "react";
 
 const FREE_POSTS_LIMIT = 10;
 
-const INITIAL_SHOPS = [
-  {
-    id: "shop-1",
-    name: "Ferial Créations",
-    category: "clothes",
-    phone: "0550000000",
-    area: "عين فكرون - أم البواقي",
-    hours: "09:00 - 20:00",
-    days: "السبت - الخميس",
-    description: "خياطة عصرية وتقليدية، أطقم أفرشة، وتفصيل حسب الطلب.",
-    offerText: "تخفيض خاص على أطقم العرائس",
-    isPro: false,
-    posts: [],
-    reviews: [],
-  },
+const CATS = [
+  {id:"supermarket",ar:"سوبرماركت",fr:"Supermarché",icon:"🛒",color:"#00cc66"},
+  {id:"restaurant",ar:"مطاعم",fr:"Restaurants",icon:"🍽️",color:"#ff6b35"},
+  {id:"clothes_women",ar:"ملابس نسائية",fr:"Mode Femme",icon:"👗",color:"#ff69b4"},
+  {id:"clothes_men",ar:"ملابس رجال",fr:"Mode Homme",icon:"👔",color:"#4a90d9"},
+  {id:"clothes_kids",ar:"ملابس أطفال",fr:"Mode Enfant",icon:"👶",color:"#ffcc00"},
+  {id:"tailoring",ar:"خياطة",fr:"Couture",icon:"🧵",color:"#e879f9"},
+  {id:"accessories",ar:"أكسسوارات",fr:"Accessoires",icon:"💍",color:"#c084fc"},
+  {id:"cosmetic",ar:"كوسميتيك",fr:"Cosmétique",icon:"💄",color:"#f472b6"},
+  {id:"beauty",ar:"صالونات",fr:"Salons",icon:"✂️",color:"#fb7185"},
+  {id:"cakes",ar:"حلويات",fr:"Pâtisserie",icon:"🎂",color:"#fbbf24"},
+  {id:"pharmacy",ar:"صيدليات",fr:"Pharmacies",icon:"💊",color:"#34d399"},
+  {id:"furniture",ar:"أفرشة",fr:"Mobilier",icon:"🛋️",color:"#fb923c"},
+  {id:"wholesale",ar:"بيع بالجملة",fr:"Grossiste",icon:"📦",color:"#60a5fa"},
+  {id:"phones",ar:"هواتف",fr:"Téléphones",icon:"📱",color:"#a78bfa"},
+  {id:"doctor",ar:"أطباء",fr:"Médecins",icon:"🩺",color:"#06b6d4"},
+  {id:"realestate",ar:"عقارات",fr:"Immobilier",icon:"🏘️",color:"#f87171"},
+  {id:"charity",ar:"جمعيات خيرية",fr:"Associations",icon:"🤲",color:"#10b981"},
+  {id:"quran",ar:"مدارس قرآنية",fr:"Écoles Coraniques",icon:"📖",color:"#8b5cf6"},
 ];
 
-// تصغير الصورة تلقائياً قبل التخزين لتفادي امتلاء localStorage
+const AREAS_AR=["كل الأحياء","المركز","حي النصر","حي الورود","حي السلام","عين البيضاء","عين مليلة"];
+const AREAS_FR=["Tous quartiers","Centre","Hai Ennasr","Hai El Ouroud","Hai Essalem","Aïn Beïda","Aïn M'lila"];
+const SPECS=["all","طب عام","طب أطفال","طب الأسنان","أمراض النساء","قلب وأوعية","عيون","جلدية"];
+const TIMES=["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00"];
+
+const UI = {
+  ar: {
+    back: "← رجوع",
+    da: "دج",
+    searchPh: "🔍 ابحث عن منتج أو محل...",
+    scanning: "🤖 AI يتعرف على المنتج...",
+    doctorTitle: "احجز موعد طبي",
+    doctorSub: "طبيب",
+    pharmaTitle: "صيدلية المناوبة",
+    pharmaSub: "مفتوحة الآن",
+    offers: "العروض",
+    newToday: "الجديد اليوم",
+    compare: "مقارنة أسعار",
+    withDelivery: "مع توصيل",
+    drivers: "الموصّلين",
+    messages: "رسائلي",
+    charity: "جمعيات خيرية",
+    quran: "مدارس قرآنية",
+    catsTitle: "🏪 الأقسام",
+    haveShop: "🏪 عندك محل؟",
+    first10Free: "أول 10 منشورات مجانية",
+    registerNow: "سجّل الآن",
+    statShops: "محل",
+    statDoctors: "طبيب",
+    statFavs: "مفضلة",
+    statPts: "نقاط",
+    navHome: "الرئيسية",
+    navSearch: "بحث",
+    navOffers: "عروض",
+    navFav: "مفضلة",
+    navProfile: "حسابي",
+    postsTab: "📝 المنشورات",
+    discountsTab: "🏷️ التخفيضات",
+    reviewsTab: "⭐ التقييمات",
+    addPostBtn: "➕ أضف منشور",
+    addDiscountBtn: "🏷️ أضف تخفيض",
+    noPosts: "ما كاين منشور بعد — اضغطي ➕",
+    noDiscounts: "ما كاين تخفيضات حالياً في هذا المحل",
+    available: "✓ متوفر",
+    unavailable: "✗ نافد",
+    call: "📞 اتصل",
+    delivery: "🛵 توصيل",
+    open: "● مفتوح",
+    closed: "● مغلق",
+    chatBtn: "💬 محادثة",
+    askShop: "✉️ اسأل المحل",
+    comments: "💬 تعليقات",
+    addPostTitle: "➕ إضافة منشور",
+    uploadPhotos: "📷 صور من المعرض (حتى 10)",
+    uploadVideo: "🎥 فيديو من الجهاز",
+    max10Msg: "يمكنكِ إضافة 10 صور كحد أقصى في المنشور الواحد.",
+    postNamePh: "عنوان المنشور / المنتج *",
+    pricePh: "السعر (دج) *",
+    descPh: "وصف قصير",
+    discountPh: "تخفيض % (اختياري)",
+    availNow: "متوفر الآن؟",
+    publishBtn: "نشر المنشور ✓",
+    limitReachedBtn: "🔒 تفعيل الاشتراك (بعد 10 منشورات)",
+    upgTitle: "ارقِ للباقة المدفوعة",
+    upgSub: "وصلتِ لحد 10 منشورات مجانية",
+    later: "لاحقاً",
+    subscribeMonth: "1000 دج / شهر",
+    subscribeYear: "أو 8000 دج / سنة",
+  },
+  fr: {
+    back: "Retour →",
+    da: "DA",
+    searchPh: "🔍 Rechercher un produit ou une boutique...",
+    scanning: "🤖 IA en cours d'analyse...",
+    doctorTitle: "Rendez-vous médical",
+    doctorSub: "médecin(s)",
+    pharmaTitle: "Pharmacie de garde",
+    pharmaSub: "Ouverte",
+    offers: "Promotions",
+    newToday: "Nouveautés",
+    compare: "Comparer prix",
+    withDelivery: "Livraison dispo",
+    drivers: "Livreurs",
+    messages: "Messages",
+    charity: "Associations",
+    quran: "Écoles Coraniques",
+    catsTitle: "🏪 Catégories",
+    haveShop: "🏪 Vous avez un commerce ?",
+    first10Free: "10 premières publications gratuites",
+    registerNow: "Inscrire",
+    statShops: "Boutiques",
+    statDoctors: "Médecins",
+    statFavs: "Favoris",
+    statPts: "Points",
+    navHome: "Accueil",
+    navSearch: "Recherche",
+    navOffers: "Promos",
+    navFav: "Favoris",
+    navProfile: "Profil",
+    postsTab: "📝 Publications",
+    discountsTab: "🏷️ Promotions",
+    reviewsTab: "⭐ Avis",
+    addPostBtn: "➕ Publier",
+    addDiscountBtn: "🏷️ Ajouter promo",
+    noPosts: "Aucune publication — cliquez sur ➕",
+    noDiscounts: "Aucune promotion dans cette boutique",
+    available: "✓ Disponible",
+    unavailable: "✗ Épuisé",
+    call: "📞 Appeler",
+    delivery: "🛵 Livraison",
+    open: "● Ouvert",
+    closed: "● Fermé",
+    chatBtn: "💬 Discuter",
+    askShop: "✉️ Contacter",
+    comments: "💬 Avis produit",
+    addPostTitle: "➕ Nouvelle publication",
+    uploadPhotos: "📷 Galerie photos (max 10)",
+    uploadVideo: "🎥 Vidéo appareil",
+    max10Msg: "Maximum 10 photos par publication.",
+    postNamePh: "Titre de la publication / produit *",
+    pricePh: "Prix (DA) *",
+    descPh: "Description courte",
+    discountPh: "Réduction % (optionnel)",
+    availNow: "Disponible maintenant ?",
+    publishBtn: "Publier ✓",
+    limitReachedBtn: "🔒 Abonnement requis (après 10 posts)",
+    upgTitle: "Passer à l'offre Pro",
+    upgSub: "Vous avez atteint la limite de 10 publications gratuites",
+    later: "Plus tard",
+    subscribeMonth: "1000 DA / mois",
+    subscribeYear: "ou 8000 DA / an",
+  },
+};
+
 function compressImage(file, maxWidth = 800, quality = 0.78) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -169,1216 +181,1202 @@ function compressImage(file, maxWidth = 800, quality = 0.78) {
   });
 }
 
-function App() {
-  const [lang, setLang] = useState("ar");
-  const t = TRANSLATIONS[lang];
-  const isRTL = lang === "ar";
-
-  const [shops, setShops] = useState(() => {
-    try {
-      const saved = localStorage.getItem("dzshop_data_v2");
-      return saved ? JSON.parse(saved) : INITIAL_SHOPS;
-    } catch {
-      return INITIAL_SHOPS;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("dzshop_data_v2", JSON.stringify(shops));
-    } catch {
-      // تجاهل خطأ الامتلاء إذا كانت الفيديوهات كبيرة
-    }
-  }, [shops]);
-
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [showOnlyPromos, setShowOnlyPromos] = useState(false);
-  const [activeShopId, setActiveShopId] = useState(null);
-  const [activeTab, setActiveTab] = useState("posts"); // posts | discounts | reviews
-
-  // نافذة تسجيل محل
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [shopForm, setShopForm] = useState({
-    name: "",
-    phone: "",
-    description: "",
-    hours: "09:00 - 21:00",
-    category: "supermarket",
-    area: "عين فكرون",
-    days: "السبت - الخميس",
-    offerText: "",
-  });
-
-  // نافذة إضافة منشور
-  const [showPostModal, setShowPostModal] = useState(false);
-  const [showPaywallModal, setShowPaywallModal] = useState(false);
-  const [postForm, setPostForm] = useState({
-    title: "",
-    price: "",
-    description: "",
-    discount: "",
-    available: true,
-    mediaType: "image", // image | video
-    images: [],
-    videoUrl: "",
-  });
-
-  // معاينة معرض الصور في المنشور
-  const [lightboxMedia, setLightboxMedia] = useState(null);
-
-  // نموذج التقييم
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewText, setReviewText] = useState("");
-
-  const activeShop = shops.find((s) => s.id === activeShopId) || null;
-
-  const categories = [
-    { id: "all", label: t.all },
-    { id: "supermarket", label: t.supermarket },
-    { id: "restaurants", label: t.restaurants },
-    { id: "clothes", label: t.clothes },
-    { id: "barber", label: t.barber },
-  ];
-
-  const filteredShops = shops.filter((shop) => {
-    const matchesCat =
-      selectedCategory === "all" || shop.category === selectedCategory;
-    const q = search.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      shop.name.toLowerCase().includes(q) ||
-      shop.area.toLowerCase().includes(q) ||
-      shop.posts.some((p) => p.title.toLowerCase().includes(q));
-    const hasPromo =
-      shop.posts.some((p) => Number(p.discount) > 0) || Boolean(shop.offerText);
-    const matchesPromo = !showOnlyPromos || hasPromo;
-    return matchesCat && matchesSearch && matchesPromo;
-  });
-
-  const handleRegisterShop = (e) => {
-    e.preventDefault();
-    if (!shopForm.name.trim() || !shopForm.phone.trim()) {
-      alert(t.fillRequired);
-      return;
-    }
-    const newShop = {
-      id: "shop-" + Date.now(),
-      ...shopForm,
-      isPro: false,
-      posts: [],
-      reviews: [],
-    };
-    setShops([newShop, ...shops]);
-    setShowRegisterModal(false);
-    setActiveShopId(newShop.id);
-    setActiveTab("posts");
-    setShopForm({
-      name: "",
-      phone: "",
-      description: "",
-      hours: "09:00 - 21:00",
-      category: "supermarket",
-      area: "عين فكرون",
-      days: "السبت - الخميس",
-      offerText: "",
-    });
-  };
-
-  const handleOpenAddPost = (forceDiscount = false) => {
-    if (!activeShop) return;
-    if (!activeShop.isPro && activeShop.posts.length >= FREE_POSTS_LIMIT) {
-      setShowPaywallModal(true);
-      return;
-    }
-    setPostForm({
-      title: "",
-      price: "",
-      description: "",
-      discount: forceDiscount ? "20" : "",
-      available: true,
-      mediaType: "image",
-      images: [],
-      videoUrl: "",
-    });
-    setShowPostModal(true);
-  };
-
-  const handleImagesChange = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    const remaining = 10 - postForm.images.length;
-    if (files.length > remaining) {
-      alert(t.max10Alert);
-    }
-    const allowed = files.slice(0, Math.max(0, remaining));
-    const compressed = await Promise.all(allowed.map((f) => compressImage(f)));
-    setPostForm((prev) => ({
-      ...prev,
-      mediaType: "image",
-      videoUrl: "",
-      images: [...prev.images, ...compressed].slice(0, 10),
-    }));
-  };
-
-  const handleVideoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPostForm((prev) => ({
-      ...prev,
-      mediaType: "video",
-      images: [],
-      videoUrl: url,
-    }));
-  };
-
-  const handlePublishPost = (e) => {
-    e.preventDefault();
-    if (!activeShop) return;
-    const hasMedia =
-      (postForm.mediaType === "image" && postForm.images.length > 0) ||
-      (postForm.mediaType === "video" && postForm.videoUrl);
-
-    if (!postForm.title.trim() || !postForm.price || !hasMedia) {
-      alert(t.fillRequired);
-      return;
-    }
-
-    const newPost = {
-      id: "post-" + Date.now(),
-      title: postForm.title.trim(),
-      price: Number(postForm.price),
-      description: postForm.description.trim(),
-      discount: Number(postForm.discount) || 0,
-      available: postForm.available,
-      mediaType: postForm.mediaType,
-      images: postForm.images,
-      videoUrl: postForm.videoUrl,
-      createdAt: new Date().toLocaleDateString(),
-    };
-
-    setShops((prev) =>
-      prev.map((s) =>
-        s.id === activeShop.id ? { ...s, posts: [newPost, ...s.posts] } : s
-      )
+function renderMediaPreview(item, size = 50, onOpenGallery) {
+  if (item?.mediaType === "video" && item?.videoUrl) {
+    return (
+      <video
+        src={item.videoUrl}
+        muted
+        playsInline
+        style={{width:size,height:size,objectFit:"cover",borderRadius:12,background:"#000"}}
+      />
     );
-    setShowPostModal(false);
-  };
-
-  const handleActivatePro = () => {
-    if (!activeShop) return;
-    setShops((prev) =>
-      prev.map((s) => (s.id === activeShop.id ? { ...s, isPro: true } : s))
-    );
-    setShowPaywallModal(false);
-    alert(t.proActivated);
-  };
-
-  const handleAddReview = (e) => {
-    e.preventDefault();
-    if (!activeShop || !reviewText.trim()) return;
-    const newRev = {
-      id: "rev-" + Date.now(),
-      rating: reviewRating,
-      text: reviewText.trim(),
-    };
-    setShops((prev) =>
-      prev.map((s) =>
-        s.id === activeShop.id ? { ...s, reviews: [newRev, ...s.reviews] } : s
-      )
-    );
-    setReviewText("");
-  };
-
-  const discountPosts = activeShop
-    ? activeShop.posts.filter((p) => Number(p.discount) > 0)
-    : [];
-
-  return (
-    <div dir={isRTL ? "rtl" : "ltr"} lang={lang} style={styles.app}>
-      {/* الشريط العلوي */}
-      <header style={styles.header}>
-        <div style={styles.headerTop}>
-          <div>
-            <h1 style={styles.logo}>{t.appName}</h1>
-            <span style={styles.subLogo}>
-              {t.ratingLabel}{" "}
-              {activeShop && activeShop.reviews.length > 0
-                ? (
-                    activeShop.reviews.reduce((a, b) => a + b.rating, 0) /
-                    activeShop.reviews.length
-                  ).toFixed(1)
-                : "0"}{" "}
-              ★
-            </span>
-          </div>
-
-          <div style={styles.headerActions}>
-            <button
-              onClick={() => setShowOnlyPromos((v) => !v)}
-              style={{
-                ...styles.pillBtn,
-                background: showOnlyPromos ? "#f59e0b" : "#1e293b",
-                color: showOnlyPromos ? "#0f172a" : "#f8fafc",
-              }}
-            >
-              {t.promotions}
-            </button>
-
-            <button
-              onClick={() => setLang((prev) => (prev === "ar" ? "fr" : "ar"))}
-              style={styles.langBtn}
-              title="Change Language"
-            >
-              {lang === "ar" ? "FR" : "عربي"}
-            </button>
-          </div>
-        </div>
-
-        {/* شريط البحث والتصنيفات في الصفحة الرئيسية */}
-        {!activeShop && (
-          <>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t.searchPlaceholder}
-              style={styles.searchInput}
-            />
-
-            <div style={styles.catsRow}>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  style={{
-                    ...styles.catChip,
-                    background:
-                      selectedCategory === cat.id ? "#f59e0b" : "#1e293b",
-                    color: selectedCategory === cat.id ? "#0f172a" : "#e2e8f0",
-                  }}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </>
+  }
+  const imgs = item?.images?.length ? item.images : (typeof item?.image === "string" && (item.image.startsWith("data:") || item.image.startsWith("http") || item.image.startsWith("blob:")) ? [item.image] : []);
+  if (imgs.length > 0) {
+    return (
+      <div
+        onClick={(e) => {
+          if (onOpenGallery && imgs.length > 0) {
+            e.stopPropagation();
+            onOpenGallery(imgs);
+          }
+        }}
+        style={{position:"relative",width:size,height:size,borderRadius:12,overflow:"hidden",cursor:onOpenGallery?"pointer":"default",flexShrink:0}}
+      >
+        <img src={imgs[0]} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+        {imgs.length > 1 && (
+          <span style={{position:"absolute",bottom:2,left:2,background:"#000c",color:"#fff",fontSize:9,fontWeight:800,padding:"1px 4px",borderRadius:6}}>
+            +{imgs.length - 1}
+          </span>
         )}
-      </header>
+      </div>
+    );
+  }
+  return <span style={{fontSize:Math.round(size*0.58)}}>{item?.image || "📦"}</span>;
+}
 
-      {/* المحتوى الرئيسي */}
-      <main style={styles.main}>
-        {!activeShop ? (
-          <>
-            <div style={styles.shopsGrid}>
-              {filteredShops.map((shop) => {
-                const cover = shop.posts.find((p) => p.images?.length > 0)
-                  ?.images[0];
-                return (
-                  <div
-                    key={shop.id}
-                    onClick={() => {
-                      setActiveShopId(shop.id);
-                      setActiveTab("posts");
-                    }}
-                    style={styles.shopCard}
-                  >
-                    {cover ? (
-                      <img src={cover} alt={shop.name} style={styles.shopCover} />
-                    ) : (
-                      <div style={styles.shopCoverPlaceholder}>{shop.name[0]}</div>
-                    )}
-                    <div style={styles.shopCardBody}>
-                      <h3 style={styles.shopTitle}>{shop.name}</h3>
-                      <p style={styles.shopMeta}>{shop.area}</p>
-                      <p style={styles.shopDesc}>{shop.description}</p>
-                      {shop.offerText && (
-                        <span style={styles.offerBadge}>{shop.offerText}</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+const G=(d,dir="rtl")=>({
+  bg:d?"#0f0f1a":"#f0f4f8",bg2:d?"#1a1a2e":"#fff",bg3:d?"#16213e":"#e8edf5",
+  card:d?"linear-gradient(135deg,#1a1a2e,#16213e)":"linear-gradient(135deg,#fff,#f0f4f8)",
+  border:d?"#2a2a4a":"#dde3ed",text:d?"#fff":"#1a1a2e",t2:d?"#aaa":"#666",
+  accent:"#f0a500",fn:"'Cairo',sans-serif",dir,
+  sh:d?"0 4px 20px #00000044":"0 2px 12px #00000011",
+});
 
-            <button
-              onClick={() => setShowRegisterModal(true)}
-              style={styles.fabBtn}
-            >
-              {t.addPlace}
-            </button>
-          </>
-        ) : (
-          /* صفحة تفاصيل المحل */
-          <div style={styles.shopDetail}>
-            <button
-              onClick={() => setActiveShopId(null)}
-              style={styles.backBtn}
-            >
-              {isRTL ? "→ " : "← "}
-              {t.back}
-            </button>
-
-            <div style={styles.shopBanner}>
-              <h2 style={styles.detailTitle}>{activeShop.name}</h2>
-              <p style={styles.shopMeta}>
-                {activeShop.area} • {activeShop.hours} ({activeShop.days})
-              </p>
-              <p style={styles.shopDesc}>{activeShop.description}</p>
-
-              <div style={styles.contactRow}>
-                <a href={`tel:${activeShop.phone}`} style={styles.callBtn}>
-                  {t.call}: {activeShop.phone}
-                </a>
-                <button
-                  onClick={() => alert(t.deliveryMsg)}
-                  style={styles.deliveryBtn}
-                >
-                  {t.orderDelivery}
-                </button>
-              </div>
-            </div>
-
-            {/* التبويبات: المنشورات | التخفيضات | التقييمات */}
-            <div style={styles.tabsRow}>
-              <button
-                onClick={() => setActiveTab("posts")}
-                style={{
-                  ...styles.tabBtn,
-                  borderBottom:
-                    activeTab === "posts"
-                      ? "3px solid #f59e0b"
-                      : "3px solid transparent",
-                  color: activeTab === "posts" ? "#f59e0b" : "#cbd5e1",
-                }}
-              >
-                {t.postsTab} ({activeShop.posts.length})
-              </button>
-
-              <button
-                onClick={() => setActiveTab("discounts")}
-                style={{
-                  ...styles.tabBtn,
-                  borderBottom:
-                    activeTab === "discounts"
-                      ? "3px solid #f59e0b"
-                      : "3px solid transparent",
-                  color: activeTab === "discounts" ? "#f59e0b" : "#cbd5e1",
-                }}
-              >
-                {t.discountsTab} ({discountPosts.length})
-              </button>
-
-              <button
-                onClick={() => setActiveTab("reviews")}
-                style={{
-                  ...styles.tabBtn,
-                  borderBottom:
-                    activeTab === "reviews"
-                      ? "3px solid #f59e0b"
-                      : "3px solid transparent",
-                  color: activeTab === "reviews" ? "#f59e0b" : "#cbd5e1",
-                }}
-              >
-                ★ ({activeShop.reviews.length})
-              </button>
-            </div>
-
-            {/* محتوى تبويب المنشورات أو التخفيضات */}
-            {(activeTab === "posts" || activeTab === "discounts") && (
-              <div>
-                <div style={styles.actionBar}>
-                  <button
-                    onClick={() => handleOpenAddPost(activeTab === "discounts")}
-                    style={styles.primaryBtn}
-                  >
-                    {activeTab === "discounts" ? t.addDiscountBtn : t.addPostBtn}
-                  </button>
-                  <span style={styles.quotaText}>
-                    {activeShop.isPro
-                      ? "PRO ∞"
-                      : `${activeShop.posts.length}/${FREE_POSTS_LIMIT} ${t.freeCounter}`}
-                  </span>
-                </div>
-
-                {(activeTab === "posts" ? activeShop.posts : discountPosts)
-                  .length === 0 ? (
-                  <p style={styles.emptyText}>
-                    {activeTab === "posts" ? t.noPosts : t.noDiscounts}
-                  </p>
-                ) : (
-                  <div style={styles.postsGrid}>
-                    {(activeTab === "posts"
-                      ? activeShop.posts
-                      : discountPosts
-                    ).map((post) => {
-                      const finalPrice =
-                        post.discount > 0
-                          ? Math.round(
-                              post.price - (post.price * post.discount) / 100
-                            )
-                          : post.price;
-
-                      return (
-                        <div key={post.id} style={styles.postCard}>
-                          <div style={styles.mediaBox}>
-                            {post.mediaType === "video" && post.videoUrl ? (
-                              <video
-                                src={post.videoUrl}
-                                controls
-                                playsInline
-                                style={styles.postMedia}
-                              />
-                            ) : (
-                              <>
-                                <img
-                                  src={post.images[0]}
-                                  alt={post.title}
-                                  onClick={() =>
-                                    setLightboxMedia(post.images)
-                                  }
-                                  style={styles.postMedia}
-                                />
-                                {post.images.length > 1 && (
-                                  <button
-                                    onClick={() =>
-                                      setLightboxMedia(post.images)
-                                    }
-                                    style={styles.multiBadge}
-                                  >
-                                    +{post.images.length - 1} {t.photosCount}
-                                  </button>
-                                )}
-                              </>
-                            )}
-                            {post.discount > 0 && (
-                              <span style={styles.discountBadge}>
-                                -{post.discount}%
-                              </span>
-                            )}
-                          </div>
-
-                          <div style={styles.postBody}>
-                            <h4 style={styles.postTitle}>{post.title}</h4>
-                            <p style={styles.postDesc}>{post.description}</p>
-                            <div style={styles.priceRow}>
-                              <span style={styles.finalPrice}>
-                                {finalPrice} {t.da}
-                              </span>
-                              {post.discount > 0 && (
-                                <span style={styles.oldPrice}>
-                                  {post.price} {t.da}
-                                </span>
-                              )}
-                            </div>
-                            <span
-                              style={{
-                                ...styles.statusTag,
-                                color: post.available ? "#34d399" : "#f87171",
-                              }}
-                            >
-                              {post.available ? t.availableNow : t.unavailable}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* محتوى تبويب التقييمات */}
-            {activeTab === "reviews" && (
-              <div style={styles.reviewsBox}>
-                <form onSubmit={handleAddReview} style={styles.reviewForm}>
-                  <label style={styles.label}>{t.rateShop}</label>
-                  <select
-                    value={reviewRating}
-                    onChange={(e) => setReviewRating(Number(e.target.value))}
-                    style={styles.input}
-                  >
-                    {[5, 4, 3, 2, 1].map((n) => (
-                      <option key={n} value={n}>
-                        {"★".repeat(n)} ({n}/5)
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                    placeholder={t.reviewComment}
-                    style={styles.input}
-                  />
-                  <button type="submit" style={styles.primaryBtn}>
-                    {t.sendReview}
-                  </button>
-                </form>
-
-                {activeShop.reviews.length === 0 ? (
-                  <p style={styles.emptyText}>{t.noReviews}</p>
-                ) : (
-                  activeShop.reviews.map((r) => (
-                    <div key={r.id} style={styles.reviewItem}>
-                      <div style={{ color: "#fbbf24" }}>
-                        {"★".repeat(r.rating)}
-                      </div>
-                      <p style={{ margin: "4px 0 0" }}>{r.text}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* نافذة تسجيل محل */}
-      {showRegisterModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
-            <div style={styles.modalHeader}>
-              <h3>{t.registerShopTitle}</h3>
-              <button
-                onClick={() => setShowRegisterModal(false)}
-                style={styles.closeBtn}
-              >
-                ✕
-              </button>
-            </div>
-            <div style={styles.freeNotice}>{t.freeBanner}</div>
-            <form onSubmit={handleRegisterShop} style={styles.form}>
-              <input
-                type="text"
-                placeholder={t.shopName}
-                value={shopForm.name}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, name: e.target.value })
-                }
-                style={styles.input}
-                required
-              />
-              <input
-                type="tel"
-                placeholder={t.phone}
-                value={shopForm.phone}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, phone: e.target.value })
-                }
-                style={styles.input}
-                required
-              />
-              <input
-                type="text"
-                placeholder={t.description}
-                value={shopForm.description}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, description: e.target.value })
-                }
-                style={styles.input}
-              />
-              <input
-                type="text"
-                placeholder={t.hours}
-                value={shopForm.hours}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, hours: e.target.value })
-                }
-                style={styles.input}
-              />
-              <select
-                value={shopForm.category}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, category: e.target.value })
-                }
-                style={styles.input}
-              >
-                <option value="supermarket">{t.supermarket}</option>
-                <option value="restaurants">{t.restaurants}</option>
-                <option value="clothes">{t.clothes}</option>
-                <option value="barber">{t.barber}</option>
-              </select>
-              <input
-                type="text"
-                placeholder={t.area}
-                value={shopForm.area}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, area: e.target.value })
-                }
-                style={styles.input}
-              />
-              <input
-                type="text"
-                placeholder={t.days}
-                value={shopForm.days}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, days: e.target.value })
-                }
-                style={styles.input}
-              />
-              <input
-                type="text"
-                placeholder={t.offerText}
-                value={shopForm.offerText}
-                onChange={(e) =>
-                  setShopForm({ ...shopForm, offerText: e.target.value })
-                }
-                style={styles.input}
-              />
-              <button type="submit" style={styles.primaryBtn}>
-                {t.saveShop}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* نافذة إضافة منشور (حتى 10 صور أو فيديو) */}
-      {showPostModal && activeShop && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
-            <div style={styles.modalHeader}>
-              <h3>{t.addPostTitle}</h3>
-              <button
-                onClick={() => setShowPostModal(false)}
-                style={styles.closeBtn}
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handlePublishPost} style={styles.form}>
-              <p style={styles.hintText}>{t.uploadMediaHint}</p>
-
-              <div style={styles.uploadButtonsRow}>
-                <label style={styles.uploadLabel}>
-                  {t.selectImages} ({postForm.images.length}/10)
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImagesChange}
-                    style={{ display: "none" }}
-                  />
-                </label>
-
-                <label style={styles.uploadLabelAlt}>
-                  {t.selectVideo}
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={handleVideoChange}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              </div>
-
-              {/* معاينة الصور أو الفيديو المختار */}
-              {postForm.mediaType === "image" && postForm.images.length > 0 && (
-                <div style={styles.previewGrid}>
-                  {postForm.images.map((src, idx) => (
-                    <div key={idx} style={styles.previewItem}>
-                      <img src={src} alt="" style={styles.previewThumb} />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPostForm((prev) => ({
-                            ...prev,
-                            images: prev.images.filter((_, i) => i !== idx),
-                          }))
-                        }
-                        style={styles.removeThumbBtn}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {postForm.mediaType === "video" && postForm.videoUrl && (
-                <video
-                  src={postForm.videoUrl}
-                  controls
-                  style={styles.videoPreview}
-                />
-              )}
-
-              <input
-                type="text"
-                placeholder={t.postTitle}
-                value={postForm.title}
-                onChange={(e) =>
-                  setPostForm({ ...postForm, title: e.target.value })
-                }
-                style={styles.input}
-                required
-              />
-
-              <input
-                type="number"
-                placeholder={t.price}
-                value={postForm.price}
-                onChange={(e) =>
-                  setPostForm({ ...postForm, price: e.target.value })
-                }
-                style={styles.input}
-                required
-              />
-
-              <input
-                type="text"
-                placeholder={t.shortDesc}
-                value={postForm.description}
-                onChange={(e) =>
-                  setPostForm({ ...postForm, description: e.target.value })
-                }
-                style={styles.input}
-              />
-
-              <input
-                type="number"
-                min="0"
-                max="99"
-                placeholder={t.discountPercent}
-                value={postForm.discount}
-                onChange={(e) =>
-                  setPostForm({ ...postForm, discount: e.target.value })
-                }
-                style={styles.input}
-              />
-
-              <label style={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  checked={postForm.available}
-                  onChange={(e) =>
-                    setPostForm({ ...postForm, available: e.target.checked })
-                  }
-                />
-                <span>{t.availableNow}</span>
-              </label>
-
-              <div style={styles.quotaFooter}>
-                {activeShop.posts.length}/{FREE_POSTS_LIMIT} {t.freeCounter}
-              </div>
-
-              <button type="submit" style={styles.primaryBtn}>
-                {t.publishPost}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* نافذة الدفع بعد تجاوز 10 منشورات */}
-      {showPaywallModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
-            <div style={styles.modalHeader}>
-              <h3 style={{ color: "#fbbf24" }}>{t.limitReachedTitle}</h3>
-              <button
-                onClick={() => setShowPaywallModal(false)}
-                style={styles.closeBtn}
-              >
-                ✕
-              </button>
-            </div>
-            <p style={{ lineHeight: 1.6, color: "#e2e8f0" }}>
-              {t.limitReachedDesc}
-            </p>
-            <button onClick={handleActivatePro} style={styles.primaryBtn}>
-              {t.activatePro}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* معرض عرض الصور المتعددة في المنشور الواحد */}
-      {lightboxMedia && (
-        <div
-          onClick={() => setLightboxMedia(null)}
-          style={styles.modalOverlay}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ ...styles.modal, maxWidth: 680 }}
-          >
-            <div style={styles.modalHeader}>
-              <span>
-                {lightboxMedia.length} {t.photosCount}
-              </span>
-              <button
-                onClick={() => setLightboxMedia(null)}
-                style={styles.closeBtn}
-              >
-                ✕
-              </button>
-            </div>
-            <div style={styles.lightboxGrid}>
-              {lightboxMedia.map((img, i) => (
-                <img key={i} src={img} alt="" style={styles.lightboxImg} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+function Modal({onClose,children,g}){
+  return(
+    <div style={{position:"fixed",inset:0,background:"#000b",zIndex:999,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+      <div style={{background:g.card,borderRadius:"24px 24px 0 0",padding:"24px 20px 44px",width:"100%",maxWidth:430,border:`1px solid ${g.border}`,direction:g.dir,fontFamily:g.fn,maxHeight:"92vh",overflowY:"auto",color:g.text}}>
+        {children}
+      </div>
     </div>
   );
 }
 
-const styles = {
-  app: {
-    minHeight: "100vh",
-    background: "#0f172a",
-    color: "#f8fafc",
-    fontFamily: "system-ui, -apple-system, sans-serif",
-    paddingBottom: 90,
-  },
-  header: {
-    background: "#16213e",
-    padding: "16px 20px",
-    borderBottom: "1px solid #1e293b",
-    position: "sticky",
-    top: 0,
-    zIndex: 10,
-  },
-  headerTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  logo: { margin: 0, fontSize: 22, color: "#f59e0b", fontWeight: 800 },
-  subLogo: { fontSize: 13, color: "#fbbf24" },
-  headerActions: { display: "flex", gap: 8, alignItems: "center" },
-  pillBtn: {
-    border: "none",
-    borderRadius: 20,
-    padding: "8px 14px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  langBtn: {
-    background: "#f59e0b",
-    color: "#0f172a",
-    border: "none",
-    borderRadius: 20,
-    padding: "8px 14px",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-  searchInput: {
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "12px 16px",
-    borderRadius: 12,
-    border: "1px solid #334155",
-    background: "#0f172a",
-    color: "#f8fafc",
-    marginBottom: 12,
-    fontSize: 15,
-  },
-  catsRow: { display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 },
-  catChip: {
-    border: "none",
-    borderRadius: 20,
-    padding: "8px 16px",
-    fontWeight: 600,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-  },
-  main: { maxWidth: 960, margin: "0 auto", padding: 16 },
-  shopsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-    gap: 16,
-  },
-  shopCard: {
-    background: "#1e293b",
-    borderRadius: 16,
-    overflow: "hidden",
-    cursor: "pointer",
-    border: "1px solid #334155",
-  },
-  shopCover: { width: "100%", height: 150, objectFit: "cover" },
-  shopCoverPlaceholder: {
-    width: "100%",
-    height: 150,
-    background: "linear-gradient(135deg, #1e3a8a, #f59e0b)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 42,
-    fontWeight: 800,
-  },
-  shopCardBody: { padding: 14 },
-  shopTitle: { margin: "0 0 4px", fontSize: 18 },
-  shopMeta: { margin: "0 0 6px", fontSize: 13, color: "#94a3b8" },
-  shopDesc: { margin: "0 0 8px", fontSize: 14, color: "#cbd5e1" },
-  offerBadge: {
-    display: "inline-block",
-    background: "rgba(245,158,11,0.18)",
-    color: "#fbbf24",
-    padding: "4px 10px",
-    borderRadius: 8,
-    fontSize: 12,
-    fontWeight: 700,
-  },
-  fabBtn: {
-    position: "fixed",
-    bottom: 22,
-    left: "50%",
-    transform: "translateX(-50%)",
-    background: "#f59e0b",
-    color: "#0f172a",
-    border: "none",
-    borderRadius: 30,
-    padding: "14px 28px",
-    fontSize: 16,
-    fontWeight: 800,
-    cursor: "pointer",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-  },
-  shopDetail: { display: "flex", flexDirection: "column", gap: 14 },
-  backBtn: {
-    alignSelf: "flex-start",
-    background: "#1e293b",
-    color: "#f8fafc",
-    border: "none",
-    borderRadius: 10,
-    padding: "8px 14px",
-    cursor: "pointer",
-  },
-  shopBanner: {
-    background: "#1e293b",
-    borderRadius: 16,
-    padding: 18,
-    border: "1px solid #334155",
-  },
-  detailTitle: { margin: "0 0 6px", color: "#f59e0b", fontSize: 22 },
-  contactRow: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 },
-  callBtn: {
-    flex: 1,
-    textAlign: "center",
-    background: "#16a34a",
-    color: "#fff",
-    textDecoration: "none",
-    padding: "12px",
-    borderRadius: 12,
-    fontWeight: 700,
-  },
-  deliveryBtn: {
-    flex: 1,
-    background: "#0284c7",
-    color: "#fff",
-    border: "none",
-    padding: "12px",
-    borderRadius: 12,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  tabsRow: {
-    display: "flex",
-    justifyContent: "space-around",
-    borderBottom: "1px solid #334155",
-  },
-  tabBtn: {
-    background: "transparent",
-    border: "none",
-    padding: "12px 16px",
-    fontSize: 15,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  actionBar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  quotaText: { fontSize: 13, color: "#94a3b8", fontWeight: 700 },
-  primaryBtn: {
-    background: "#f59e0b",
-    color: "#0f172a",
-    border: "none",
-    borderRadius: 12,
-    padding: "12px 20px",
-    fontWeight: 800,
-    fontSize: 15,
-    cursor: "pointer",
-  },
-  emptyText: { textAlign: "center", color: "#94a3b8", padding: "32px 0" },
-  postsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-    gap: 14,
-  },
-  postCard: {
-    background: "#1e293b",
-    borderRadius: 14,
-    overflow: "hidden",
-    border: "1px solid #334155",
-  },
-  mediaBox: { position: "relative", width: "100%", height: 190, background: "#020617" },
-  postMedia: { width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" },
-  multiBadge: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    background: "rgba(15,23,42,0.85)",
-    color: "#f8fafc",
-    border: "1px solid #475569",
-    borderRadius: 8,
-    padding: "4px 8px",
-    fontSize: 12,
-    cursor: "pointer",
-  },
-  discountBadge: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    background: "#ef4444",
-    color: "#fff",
-    borderRadius: 8,
-    padding: "4px 8px",
-    fontWeight: 800,
-    fontSize: 12,
-  },
-  postBody: { padding: 12 },
-  postTitle: { margin: "0 0 4px", fontSize: 16 },
-  postDesc: { margin: "0 0 8px", fontSize: 13, color: "#94a3b8" },
-  priceRow: { display: "flex", gap: 8, alignItems: "center", marginBottom: 6 },
-  finalPrice: { fontWeight: 800, color: "#fbbf24", fontSize: 16 },
-  oldPrice: {
-    textDecoration: "line-through",
-    color: "#64748b",
-    fontSize: 13,
-  },
-  statusTag: { fontSize: 12, fontWeight: 700 },
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(2,6,23,0.8)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    zIndex: 50,
-  },
-  modal: {
-    background: "#16213e",
-    borderRadius: 18,
-    padding: 20,
-    width: "100%",
-    maxWidth: 460,
-    maxHeight: "90vh",
-    overflowY: "auto",
-    border: "1px solid #334155",
-  },
-  modalHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  closeBtn: {
-    background: "transparent",
-    border: "none",
-    color: "#94a3b8",
-    fontSize: 20,
-    cursor: "pointer",
-  },
-  freeNotice: {
-    background: "rgba(34,197,94,0.15)",
-    color: "#4ade80",
-    padding: "10px 12px",
-    borderRadius: 10,
-    fontSize: 13,
-    fontWeight: 700,
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  form: { display: "flex", flexDirection: "column", gap: 10 },
-  input: {
-    padding: "11px 14px",
-    borderRadius: 10,
-    border: "1px solid #334155",
-    background: "#0f172a",
-    color: "#f8fafc",
-    fontSize: 14,
-  },
-  hintText: { margin: 0, fontSize: 13, color: "#cbd5e1" },
-  uploadButtonsRow: { display: "flex", gap: 8 },
-  uploadLabel: {
-    flex: 1,
-    textAlign: "center",
-    background: "#1e293b",
-    border: "1px dashed #f59e0b",
-    color: "#fbbf24",
-    padding: "10px",
-    borderRadius: 10,
-    cursor: "pointer",
-    fontWeight: 700,
-    fontSize: 13,
-  },
-  uploadLabelAlt: {
-    flex: 1,
-    textAlign: "center",
-    background: "#1e293b",
-    border: "1px dashed #38bdf8",
-    color: "#38bdf8",
-    padding: "10px",
-    borderRadius: 10,
-    cursor: "pointer",
-    fontWeight: 700,
-    fontSize: 13,
-  },
-  previewGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(5, 1fr)",
-    gap: 6,
-  },
-  previewItem: { position: "relative", height: 56 },
-  previewThumb: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    borderRadius: 8,
-  },
-  removeThumbBtn: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    background: "#ef4444",
-    color: "#fff",
-    border: "none",
-    borderRadius: "50%",
-    width: 18,
-    height: 18,
-    fontSize: 10,
-    cursor: "pointer",
-  },
-  videoPreview: { width: "100%", maxHeight: 180, borderRadius: 10 },
-  checkboxRow: { display: "flex", gap: 8, alignItems: "center", fontSize: 14 },
-  quotaFooter: { textAlign: "center", fontSize: 12, color: "#94a3b8" },
-  reviewsBox: { display: "flex", flexDirection: "column", gap: 12 },
-  reviewForm: { display: "flex", flexDirection: "column", gap: 8 },
-  label: { fontSize: 14, fontWeight: 700 },
-  reviewItem: {
-    background: "#1e293b",
-    padding: 12,
-    borderRadius: 10,
-    border: "1px solid #334155",
-  },
-  lightboxGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-    gap: 10,
-  },
-  lightboxImg: { width: "100%", borderRadius: 10, objectFit: "cover" },
-};
+function UpgModal({onClose,onSubscribe,g,lang="ar"}){
+  const u=UI[lang]||UI.ar;
+  return(
+    <Modal onClose={onClose} g={g}>
+      <div style={{textAlign:"center",marginBottom:20}}>
+        <div style={{fontSize:48}}>💎</div>
+        <div style={{fontSize:20,fontWeight:800,color:g.accent}}>{u.upgTitle}</div>
+        <div style={{fontSize:13,color:g.t2,marginTop:4}}>{u.upgSub}</div>
+      </div>
+      {[["📦",lang==="fr"?"Publications illimitées":"منشورات غير محدودة"],["⭐",lang==="fr"?"Mise en avant":"ظهور في الأول"],["✅",lang==="fr"?"Badge vérifié":"شارة موثق"],["📊",lang==="fr"?"Statistiques":"إحصائيات"],["🔔",lang==="fr"?"Alertes promos":"إشعارات ترويجية"]].map(([ic,tx],k)=>(
+        <div key={k} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:`1px solid ${g.border}44`}}>
+          <span style={{fontSize:20}}>{ic}</span><span style={{fontSize:14}}>{tx}</span>
+          <span style={{marginInlineStart:"auto",color:"#00ff88",fontSize:16}}>✓</span>
+        </div>
+      ))}
+      <div onClick={onSubscribe} style={{background:"linear-gradient(135deg,#f0a500,#e67e00)",borderRadius:16,padding:16,textAlign:"center",margin:"20px 0 12px",cursor:"pointer"}}>
+        <div style={{fontSize:24,fontWeight:900,color:"#fff"}}>{u.subscribeMonth}</div>
+        <div style={{fontSize:12,color:"#fff9"}}>{u.subscribeYear}</div>
+      </div>
+      <button onClick={onClose} style={{width:"100%",background:g.bg3,border:"none",borderRadius:14,padding:14,color:g.t2,fontSize:14,cursor:"pointer",fontFamily:g.fn}}>{u.later}</button>
+    </Modal>
+  );
+}
 
-export default App;
+function AddProductModal({onClose,onAdd,onSubscribePro,isPro,count,defaultDiscount=0,g,lang="ar"}){
+  const u=UI[lang]||UI.ar;
+  const[form,setF]=useState({
+    name:"",
+    price:"",
+    desc:"",
+    image:"📦",
+    mediaType:"image",
+    images:[],
+    videoUrl:"",
+    available:true,
+    discount:defaultDiscount||0,
+  });
+  const[showUp,setShowUp]=useState(false);
+  const today=new Date().toDateString();
+
+  const handlePhotos=async(e)=>{
+    const files=Array.from(e.target.files||[]);
+    if(!files.length)return;
+    const rem=10-form.images.length;
+    if(files.length>rem)alert(u.max10Msg);
+    const chosen=files.slice(0,Math.max(0,rem));
+    const compressed=await Promise.all(chosen.map(f=>compressImage(f)));
+    setF(prev=>({
+      ...prev,
+      mediaType:"image",
+      videoUrl:"",
+      images:[...prev.images,...compressed].slice(0,10),
+      image:[...prev.images,...compressed][0]||prev.image,
+    }));
+  };
+
+  const handleVideo=(e)=>{
+    const file=e.target.files?.[0];
+    if(!file)return;
+    const url=URL.createObjectURL(file);
+    setF(prev=>({...prev,mediaType:"video",images:[],videoUrl:url,image:"🎥"}));
+  };
+
+  const hasMedia=(form.mediaType==="video"&&Boolean(form.videoUrl))||(form.mediaType==="image"&&form.images.length>0);
+
+  return(<>
+    {showUp&&<UpgModal onClose={()=>setShowUp(false)} onSubscribe={()=>{onSubscribePro?.();setShowUp(false);}} g={g} lang={lang}/>}
+    <Modal onClose={onClose} g={g}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div style={{fontSize:17,fontWeight:800,color:g.accent}}>{u.addPostTitle}</div>
+        <button onClick={onClose} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+      </div>
+
+      <div style={{display:"flex",gap:8,marginBottom:10}}>
+        <label style={{flex:1,background:g.bg3,border:`1px dashed ${g.accent}`,borderRadius:12,padding:"10px 8px",textAlign:"center",fontSize:12,fontWeight:700,color:g.accent,cursor:"pointer"}}>
+          {u.uploadPhotos} ({form.images.length}/10)
+          <input type="file" accept="image/*" multiple onChange={handlePhotos} style={{display:"none"}}/>
+        </label>
+        <label style={{flex:1,background:g.bg3,border:"1px dashed #06b6d4",borderRadius:12,padding:"10px 8px",textAlign:"center",fontSize:12,fontWeight:700,color:"#06b6d4",cursor:"pointer"}}>
+          {u.uploadVideo}
+          <input type="file" accept="video/*" onChange={handleVideo} style={{display:"none"}}/>
+        </label>
+      </div>
+
+      {form.mediaType==="image"&&form.images.length>0&&(
+        <div style={{display:"flex",gap:6,overflowX:"auto",marginBottom:12,paddingBottom:4}}>
+          {form.images.map((src,idx)=>(
+            <div key={idx} style={{position:"relative",flexShrink:0}}>
+              <img src={src} alt="" style={{width:56,height:56,objectFit:"cover",borderRadius:10}}/>
+              <button type="button" onClick={()=>setF(prev=>({...prev,images:prev.images.filter((_,i)=>i!==idx)}))}
+                style={{position:"absolute",top:-4,right:-4,background:"#ff4444",color:"#fff",border:"none",borderRadius:"50%",width:18,height:18,fontSize:10,cursor:"pointer"}}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {form.mediaType==="video"&&form.videoUrl&&(
+        <video src={form.videoUrl} controls playsInline style={{width:"100%",maxHeight:150,borderRadius:12,marginBottom:12}}/>
+      )}
+
+      {[[u.postNamePh,"name","text"],[u.pricePh,"price","number"],[u.descPh,"desc","text"]].map(([pl,k,tp])=>(
+        <input key={k} placeholder={pl} type={tp} value={form[k]} onChange={e=>setF({...form,[k]:e.target.value})}
+          style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+      ))}
+
+      <input placeholder={u.discountPh} type="number" value={form.discount||""} onChange={e=>setF({...form,discount:Number(e.target.value)})}
+        style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:12,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px",background:g.bg3,borderRadius:12,marginBottom:14}}>
+        <span style={{fontSize:14}}>{u.availNow}</span>
+        <button type="button" onClick={()=>setF({...form,available:!form.available})}
+          style={{background:form.available?"#00ff8822":"#ff444422",border:`1px solid ${form.available?"#00ff88":"#ff4444"}`,borderRadius:20,padding:"6px 18px",color:form.available?"#00ff88":"#ff4444",cursor:"pointer",fontFamily:g.fn,fontWeight:700}}>
+          {form.available?u.available:u.unavailable}
+        </button>
+      </div>
+
+      <div style={{fontSize:12,color:g.t2,marginBottom:10,textAlign:"center"}}>
+        {isPro ? "PRO ∞" : `${count}/${FREE_POSTS_LIMIT} ${u.first10Free}`}
+      </div>
+
+      <button onClick={()=>{
+        if(!isPro && count>=FREE_POSTS_LIMIT){setShowUp(true);return;}
+        if(!form.name||!form.price||!hasMedia)return;
+        onAdd({...form,price:Number(form.price),id:Date.now(),status:"pending",addedDate:today});
+        onClose();
+      }}
+        style={{width:"100%",background:(!isPro&&count>=FREE_POSTS_LIMIT)?"#2a2a4a":"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        {(!isPro&&count>=FREE_POSTS_LIMIT)?u.limitReachedBtn:u.publishBtn}
+      </button>
+    </Modal>
+  </>);
+}
+
+function RegShopModal({onClose,onReg,g,lang="ar"}){
+  const u=UI[lang]||UI.ar;
+  const areas=lang==="fr"?AREAS_FR.filter(a=>a!=="Tous quartiers"):AREAS_AR.filter(a=>a!=="كل الأحياء");
+  const[f,setF]=useState({name:"",category:"supermarket",phone:"",desc:"",hours:"09:00 - 21:00",days:"السبت - الخميس",hasDelivery:false,area:areas[0]||"المركز",discount:0,offerText:""});
+  const today=new Date().toDateString();
+  const inp=(pl,k,tp="text")=>(
+    <input key={k} placeholder={pl} type={tp} value={f[k]} onChange={e=>setF({...f,[k]:tp==="number"?Number(e.target.value):e.target.value})}
+      style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+  );
+  const sel=(k,opts)=>(
+    <select value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})}
+      style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}>
+      {opts.map(o=>typeof o==="string"?<option key={o} value={o}>{o}</option>:<option key={o.id} value={o.id}>{o.icon} {lang==="fr"?o.fr:o.ar}</option>)}
+    </select>
+  );
+  return(
+    <Modal onClose={onClose} g={g}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:17,fontWeight:800,color:g.accent}}>{lang==="fr"?"🏪 Inscrire votre boutique":"🏪 تسجيل محلك"}</div>
+        <button onClick={onClose} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+      </div>
+      <div style={{background:"#00ff8811",border:"1px solid #00ff8833",borderRadius:12,padding:10,marginBottom:14,fontSize:13,color:"#00ff88",textAlign:"center"}}>✅ {u.first10Free}</div>
+      {inp(lang==="fr"?"Nom de la boutique *":"اسم المحل *","name")}
+      {inp(lang==="fr"?"Téléphone *":"رقم الهاتف *","phone")}
+      {inp(lang==="fr"?"Description":"وصف المحل","desc")}
+      {inp("09:00 - 21:00","hours")}
+      {sel("category",CATS.filter(c=>c.id!=="doctor"&&c.id!=="realestate"))}
+      {sel("area",areas)}
+      {sel("days",lang==="fr"?["Tous les jours","Samedi - Jeudi","Samedi - Vendredi","Lundi - Vendredi"]:["كل أيام الأسبوع","السبت - الخميس","السبت - الجمعة","الإثنين - الجمعة"])}
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
+        {inp(lang==="fr"?"Remise %":"تخفيض %","discount","number")}
+        {inp(lang==="fr"?"Texte offre":"نص العرض","offerText")}
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,padding:"12px",background:g.bg3,borderRadius:12}}>
+        <span style={{fontSize:14}}>{lang==="fr"?"🛵 Livraison disponible ?":"🛵 عندك توصيل؟"}</span>
+        <button onClick={()=>setF({...f,hasDelivery:!f.hasDelivery})}
+          style={{background:f.hasDelivery?"#00ff8822":"#2a2a4a",border:`1px solid ${f.hasDelivery?"#00ff88":g.border}`,borderRadius:20,padding:"6px 18px",color:f.hasDelivery?"#00ff88":g.t2,cursor:"pointer",fontFamily:g.fn,fontWeight:700}}>
+          {f.hasDelivery?(lang==="fr"?"✓ Oui":"✓ نعم"):(lang==="fr"?"Non":"لا")}
+        </button>
+      </div>
+      <button onClick={()=>{if(!f.name||!f.phone)return;onReg({id:Date.now(),...f,distance:"—",rating:5,verified:false,plan:"free",onDuty:false,products:[],reviews:[],addedDate:today});onClose();}}
+        style={{width:"100%",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        {lang==="fr"?"S'inscrire gratuitement ✓":"سجّل الآن مجاناً ✓"}
+      </button>
+    </Modal>
+  );
+}
+
+function RevModal({onClose,onSubmit,g,addPts}){
+  const[stars,setSt]=useState(5);
+  const[comment,setCm]=useState("");
+  const[name,setNm]=useState("");
+  return(
+    <Modal onClose={onClose} g={g}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:17,fontWeight:800,color:g.accent}}>⭐ أضف تقييم</div>
+        <button onClick={onClose} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+      </div>
+      <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:14}}>
+        {[1,2,3,4,5].map(s=><button key={s} onClick={()=>setSt(s)} style={{background:"none",border:"none",fontSize:32,cursor:"pointer",filter:s<=stars?"none":"grayscale(1)"}}>⭐</button>)}
+      </div>
+      {[["الاسم",name,setNm],["تعليقك...",comment,setCm]].map(([pl,v,sv],i)=>(
+        <input key={i} placeholder={pl} value={v} onChange={e=>sv(e.target.value)}
+          style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+      ))}
+      <div style={{background:"#f0a50011",borderRadius:10,padding:8,fontSize:12,color:g.accent,marginBottom:14,textAlign:"center"}}>🏆 ستكسبين +10 نقاط</div>
+      <button onClick={()=>{if(!name)return;onSubmit({id:Date.now(),stars,comment,name,date:new Date().toLocaleDateString("ar")});addPts(10);onClose();}}
+        style={{width:"100%",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        إرسال ✓
+      </button>
+    </Modal>
+  );
+}
+
+function ProdCommentsModal({prod,onClose,onAdd,g}){
+  const[name,setName]=useState("");
+  const[text,setText]=useState("");
+  const list=prod.comments||[];
+  const inp={width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"};
+  const send=()=>{
+    if(!name.trim()||!text.trim())return;
+    onAdd(prod.id,{id:Date.now(),name:name.trim(),text:text.trim(),date:new Date().toLocaleDateString("ar")});
+    setText("");
+  };
+  return(
+    <Modal onClose={onClose} g={g}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:16,fontWeight:800,color:g.accent}}>💬 تعليقات: {prod.name}</div>
+        <button onClick={onClose} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+      </div>
+      <div style={{maxHeight:"38vh",overflowY:"auto",marginBottom:12}}>
+        {list.length===0?<div style={{textAlign:"center",padding:"24px",color:g.t2,fontSize:14}}>ما كاين تعليق بعد، كوني أول وحدة 💬</div>:list.map(c=>(
+          <div key={c.id} style={{background:g.bg3,borderRadius:14,padding:12,marginBottom:8}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontWeight:700,fontSize:13}}>{c.name}</span>
+              <span style={{color:g.t2,fontSize:11}}>{c.date}</span>
+            </div>
+            <div style={{fontSize:14}}>{c.text}</div>
+          </div>
+        ))}
+      </div>
+      <input placeholder="اسمك *" value={name} onChange={e=>setName(e.target.value)} style={inp}/>
+      <input placeholder="اكتبي تعليقك..." value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} style={inp}/>
+      <button onClick={send} style={{width:"100%",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>إرسال التعليق ✓</button>
+    </Modal>
+  );
+}
+
+function ChatScreen({shop,msgs,initial,onSend,onBack,g}){
+  const[inp,setInp]=useState(initial||"");
+  const btm=useRef(null);
+  const cat=CATS.find(c=>c.id===shop.category);
+  const all=[{id:0,from:"shop",text:"مرحباً! كيف يمكنني مساعدتك؟"},...msgs];
+  useEffect(()=>{btm.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
+  const send=()=>{
+    if(!inp.trim())return;
+    onSend(inp.trim());
+    setInp("");
+  };
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,display:"flex",flexDirection:"column"}}>
+      <div style={{background:g.card,padding:"14px 16px",borderBottom:`1px solid ${g.border}`,display:"flex",alignItems:"center",gap:12,position:"sticky",top:0,zIndex:10}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:20,cursor:"pointer"}}>←</button>
+        <div style={{background:`${cat?.color}22`,borderRadius:12,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{cat?.icon}</div>
+        <div><div style={{fontWeight:800,fontSize:15}}>{shop.name}</div><div style={{color:g.t2,fontSize:12}}>📞 {shop.phone}</div></div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px",paddingBottom:80}}>
+        {all.map(m=>(
+          <div key={m.id} style={{display:"flex",justifyContent:m.from==="user"?"flex-start":"flex-end",marginBottom:12}}>
+            <div style={{background:m.from==="user"?"linear-gradient(135deg,#f0a500,#e67e00)":g.bg3,borderRadius:m.from==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",padding:"10px 14px",maxWidth:"75%"}}>
+              <div style={{fontSize:14,color:m.from==="user"?"#fff":g.text}}>{m.text}</div>
+            </div>
+          </div>
+        ))}
+        <div ref={btm}/>
+      </div>
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:g.card,borderTop:`1px solid ${g.border}`,padding:"10px 16px",display:"flex",gap:8}}>
+        <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="اكتب رسالة..."
+          style={{flex:1,background:g.bg,border:`1px solid ${g.border}`,borderRadius:22,padding:"10px 16px",color:g.text,fontFamily:g.fn,fontSize:14,outline:"none"}}/>
+        <button onClick={send} style={{background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:"50%",width:44,height:44,color:"#fff",fontSize:18,cursor:"pointer",flexShrink:0}}>↑</button>
+      </div>
+    </div>
+  );
+}
+
+function MessagesScreen({onBack,shops,chats,onOpen,g}){
+  const rows=shops.filter(sh=>(chats[sh.id]||[]).length>0)
+    .sort((x,y)=>chats[y.id][chats[y.id].length-1].id-chats[x.id][chats[x.id].length-1].id);
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,maxWidth:430,margin:"0 auto"}}>
+      <div style={{background:`linear-gradient(160deg,#f0a50033,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>💬 رسائلي</div>
+        <div style={{color:g.t2,fontSize:13,marginTop:2}}>{rows.length} محادثة</div>
+      </div>
+      <div style={{padding:"14px 14px 100px"}}>
+        {rows.length===0?(
+          <div style={{textAlign:"center",padding:"60px 20px",color:g.t2}}>
+            <div style={{fontSize:56,marginBottom:12}}>💬</div>
+            <div style={{fontSize:16}}>ما كاين محادثات بعد</div>
+            <div style={{fontSize:13,marginTop:8}}>ادخلي لأي محل واضغطي "💬 محادثة"</div>
+          </div>
+        ):rows.map(sh=>{
+          const cat=CATS.find(c=>c.id===sh.category);
+          const last=chats[sh.id][chats[sh.id].length-1];
+          return(
+            <div key={sh.id} onClick={()=>onOpen(sh)} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${g.border}`,display:"flex",gap:12,alignItems:"center",cursor:"pointer"}}>
+              <div style={{background:`${cat?.color}22`,borderRadius:12,width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{cat?.icon}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:800,fontSize:14}}>{sh.name}</div>
+                <div style={{color:g.t2,fontSize:12,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{last.from==="user"?"أنتِ: ":""}{last.text}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DelivModal({shop,onClose,g}){
+  const[addr,setAddr]=useState("");
+  const[done,setDone]=useState(false);
+  if(done)return(
+    <div style={{position:"fixed",inset:0,background:"#000b",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{background:g.card,borderRadius:24,padding:32,textAlign:"center",maxWidth:300,width:"100%",border:`1px solid ${g.border}`}}>
+        <div style={{fontSize:64,marginBottom:16}}>🛵</div>
+        <div style={{fontSize:20,fontWeight:800,color:"#00ff88",marginBottom:8}}>تم إرسال الطلب!</div>
+        <div style={{color:g.t2,fontSize:14,marginBottom:20}}>سيتصل بك {shop.name} قريباً</div>
+        <button onClick={onClose} style={{background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:"12px 32px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>حسناً ✓</button>
+      </div>
+    </div>
+  );
+  return(
+    <Modal onClose={onClose} g={g}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}>
+        <div style={{fontSize:17,fontWeight:800,color:g.accent}}>🛵 طلب توصيل</div>
+        <button onClick={onClose} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+      </div>
+      <div style={{background:g.bg3,borderRadius:14,padding:14,marginBottom:14,display:"flex",gap:10,alignItems:"center"}}>
+        <span style={{fontSize:22}}>🏪</span>
+        <div><div style={{fontWeight:700}}>{shop.name}</div><div style={{color:g.t2,fontSize:12}}>📞 {shop.phone}</div></div>
+      </div>
+      <input placeholder="عنوانك الكامل *" value={addr} onChange={e=>setAddr(e.target.value)}
+        style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:16,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+      <button onClick={()=>{if(!addr)return;setDone(true);}}
+        style={{width:"100%",background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        🛵 إرسال طلب التوصيل
+      </button>
+    </Modal>
+  );
+}
+
+function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,onChat,addPts,lang="ar"}){
+  const u=UI[lang]||UI.ar;
+  const cat=CATS.find(c=>c.id===shop.category);
+  const[products,setProducts]=useState(shop.products||[]);
+  const[reviews,setReviews]=useState(shop.reviews||[]);
+  const[showAdd,setShowAdd]=useState(false);
+  const[defaultDisc,setDefaultDisc]=useState(0);
+  const[showRev,setShowRev]=useState(false);
+  const[showDeliv,setShowDeliv]=useState(false);
+  const[tab,setTab]=useState("products");
+  const[reported,setReported]=useState(false);
+  const[commProd,setCommProd]=useState(null);
+  const[galleryImgs,setGalleryImgs]=useState(null);
+  const isFav=favorites.includes(shop.id);
+  const avg=reviews.length?(reviews.reduce((a,r)=>a+r.stars,0)/reviews.length).toFixed(1):shop.rating;
+  const approved=products.filter(p=>!p.status||p.status==="approved");
+  const discountedList=approved.filter(p=>Number(p.discount)>0);
+  const addProd=p=>{const uList=[...products,p];setProducts(uList);onUpdate({...shop,products:uList});};
+  const subscribePro=()=>{onUpdate({...shop,plan:"premium"});};
+  const addRev=r=>{const uList=[...reviews,r];setReviews(uList);onUpdate({...shop,reviews:uList});};
+  const addProdComment=(pid,c)=>{const uList=products.map(p=>p.id===pid?{...p,comments:[...(p.comments||[]),c]}:p);setProducts(uList);onUpdate({...shop,products:uList});};
+  const isOpen=()=>{try{const[sh,eh]=shop.hours.split(" - ").map(x=>parseInt(x));const h=new Date().getHours();return h>=sh&&h<eh;}catch{return true;}};
+
+  const renderPostCard=(p)=>(
+    <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${g.border}`}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{background:g.bg,borderRadius:12,width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0}}>
+            {renderMediaPreview(p,52,(imgs)=>setGalleryImgs(imgs))}
+            {p.discount>0&&<div style={{position:"absolute",top:-4,right:-4,background:"#ff6b35",color:"#fff",fontSize:9,fontWeight:700,borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center"}}>-{p.discount}%</div>}
+          </div>
+          <div>
+            <div style={{fontWeight:700,fontSize:14}}>{p.name}</div>
+            {p.desc&&<div style={{color:g.t2,fontSize:11,marginTop:1}}>{p.desc}</div>}
+            <div style={{color:g.accent,fontSize:16,fontWeight:800,marginTop:3}}>
+              {p.discount>0?Math.round(p.price*(1-p.discount/100)).toLocaleString():p.price?.toLocaleString()} {u.da}
+            </div>
+          </div>
+        </div>
+        <div style={{background:p.available?"#00ff8822":"#ff444422",color:p.available?"#00ff88":"#ff4444",padding:"5px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>
+          {p.available?u.available:u.unavailable}
+        </div>
+      </div>
+      {p.mediaType==="video"&&p.videoUrl&&(
+        <video src={p.videoUrl} controls playsInline style={{width:"100%",maxHeight:200,borderRadius:12,marginTop:10}}/>
+      )}
+      <div style={{display:"flex",gap:8,marginTop:12,paddingTop:10,borderTop:`1px solid ${g.border}44`}}>
+        <button onClick={()=>setCommProd(p.id)} style={{flex:1,background:g.bg3,border:"none",borderRadius:12,padding:"8px",color:g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.comments} ({(p.comments||[]).length})</button>
+        <button onClick={()=>onChat(shop,`السلام عليكم، نحب نسأل على: ${p.name}`)} style={{flex:1,background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"8px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.askShop}</button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      {showAdd&&<AddProductModal onClose={()=>setShowAdd(false)} onAdd={addProd} onSubscribePro={subscribePro} isPro={shop.plan==="premium"} count={products.length} defaultDiscount={defaultDisc} g={g} lang={lang}/>}
+      {showRev&&<RevModal onClose={()=>setShowRev(false)} onSubmit={addRev} g={g} addPts={addPts}/>}
+      {showDeliv&&<DelivModal shop={shop} onClose={()=>setShowDeliv(false)} g={g}/>}
+      {commProd&&products.find(x=>x.id===commProd)&&<ProdCommentsModal prod={products.find(x=>x.id===commProd)} onClose={()=>setCommProd(null)} onAdd={addProdComment} g={g}/>}
+      {galleryImgs&&(
+        <div onClick={()=>setGalleryImgs(null)} style={{position:"fixed",inset:0,background:"#000d",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:g.card,borderRadius:20,padding:16,maxWidth:420,width:"100%",maxHeight:"85vh",overflowY:"auto",border:`1px solid ${g.border}`}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+              <span style={{fontWeight:800}}>📷 ({galleryImgs.length})</span>
+              <button onClick={()=>setGalleryImgs(null)} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer"}}>✕</button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {galleryImgs.map((src,idx)=><img key={idx} src={src} alt="" style={{width:"100%",height:140,objectFit:"cover",borderRadius:12}}/>)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{background:`linear-gradient(160deg,${cat?.color}44,${g.bg2})`,padding:"16px 16px 0",borderBottom:`1px solid ${g.border}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>{u.back}</button>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <button onClick={()=>toggleFav(shop.id)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer"}}>{isFav?"❤️":"🤍"}</button>
+            <button onClick={()=>{navigator.share?.({title:shop.name});addPts(5);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer"}}>📤</button>
+            <button onClick={()=>onChat(shop)} style={{background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:20,padding:"6px 14px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.chatBtn}</button>
+            <button onClick={()=>{if(!reported){setReported(true);onReport(shop.id);}}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:reported?"#ff4444":"inherit"}}>{reported?"⚑":"🚩"}</button>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:12}}>
+          <div style={{background:`${cat?.color}22`,borderRadius:18,width:62,height:62,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0,border:`2px solid ${cat?.color}55`}}>{cat?.icon}</div>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+              <span style={{fontSize:18,fontWeight:800}}>{shop.name}</span>
+              {shop.verified&&<span style={{color:"#00ff88"}}>✅</span>}
+              {shop.hasDelivery&&<span style={{background:"#06b6d422",color:"#06b6d4",fontSize:11,padding:"2px 8px",borderRadius:10,fontWeight:700}}>🛵</span>}
+              {shop.discount>0&&<span style={{background:"#ff6b3522",color:"#ff6b35",fontSize:11,padding:"2px 8px",borderRadius:10,fontWeight:700}}>{shop.discount}%</span>}
+            </div>
+            {shop.desc&&<div style={{color:g.t2,fontSize:13,marginTop:3}}>{shop.desc}</div>}
+            <div style={{display:"flex",gap:10,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>
+              <span style={{fontSize:12,color:g.t2}}>📍 {shop.area||"—"}</span>
+              <span style={{fontSize:13,color:g.accent,fontWeight:700}}>⭐ {avg}</span>
+              <span style={{fontSize:12,background:isOpen()?"#00ff8822":"#ff444422",color:isOpen()?"#00ff88":"#ff4444",padding:"2px 8px",borderRadius:10}}>{isOpen()?u.open:u.closed}</span>
+            </div>
+          </div>
+        </div>
+        <div style={{background:g.bg,borderRadius:12,padding:"8px 14px",marginBottom:10,display:"flex",justifyContent:"space-between"}}>
+          <span style={{fontSize:12,color:g.t2}}>⏰ {shop.hours}</span>
+          <span style={{fontSize:12,color:g.t2}}>📅 {shop.days}</span>
+        </div>
+        <div style={{display:"flex",gap:8,marginBottom:14}}>
+          <a href={`tel:${shop.phone}`} style={{flex:1,background:"linear-gradient(135deg,#f0a500,#e67e00)",borderRadius:14,padding:"11px",color:"#fff",fontSize:14,fontWeight:700,textAlign:"center",textDecoration:"none"}}>{u.call}</a>
+          {shop.hasDelivery&&<button onClick={()=>setShowDeliv(true)} style={{flex:1,background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:14,padding:"11px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.delivery}</button>}
+        </div>
+        <div style={{display:"flex",borderTop:`1px solid ${g.border}`}}>
+          {[
+            ["products",`${u.postsTab} (${approved.length})`],
+            ["discounts",`${u.discountsTab} (${discountedList.length})`],
+            ["reviews",`★ (${reviews.length})`],
+          ].map(([id,lbl])=>(
+            <button key={id} onClick={()=>setTab(id)}
+              style={{flex:1,background:"none",border:"none",color:tab===id?g.accent:g.t2,fontSize:12,padding:"11px 6px",cursor:"pointer",fontFamily:g.fn,fontWeight:700,borderBottom:tab===id?`2px solid ${g.accent}`:"2px solid transparent"}}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{padding:"14px 14px 100px"}}>
+        {tab==="products"&&(approved.length===0?
+          <div style={{textAlign:"center",padding:"50px 20px",color:g.t2}}><div style={{fontSize:48,marginBottom:12}}>📝</div><div>{u.noPosts}</div></div>
+        :approved.map(renderPostCard))}
+
+        {tab==="discounts"&&(<>
+          <button onClick={()=>{setDefaultDisc(20);setShowAdd(true);}}
+            style={{width:"100%",background:"linear-gradient(135deg,#ff6b35,#f0a500)",border:"none",borderRadius:14,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:g.fn,marginBottom:12}}>
+            {u.addDiscountBtn}
+          </button>
+          {discountedList.length===0?
+            <div style={{textAlign:"center",padding:"40px 20px",color:g.t2}}><div style={{fontSize:44,marginBottom:10}}>🏷️</div><div>{u.noDiscounts}</div></div>
+          :discountedList.map(renderPostCard)}
+        </>)}
+
+        {tab==="reviews"&&(<>
+          <div style={{background:g.card,borderRadius:16,padding:16,marginBottom:14,border:`1px solid ${g.border}`,textAlign:"center"}}>
+            <div style={{fontSize:44,fontWeight:900,color:g.accent}}>{avg}</div>
+            <div style={{fontSize:22}}>{"⭐".repeat(Math.round(Number(avg)))}</div>
+            <div style={{color:g.t2,fontSize:13}}>{reviews.length}</div>
+          </div>
+          <button onClick={()=>setShowRev(true)}
+            style={{width:"100%",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:g.fn,marginBottom:14}}>
+            ⭐ (+10)
+          </button>
+          {reviews.map(r=>(
+            <div key={r.id} style={{background:g.card,borderRadius:14,padding:14,marginBottom:10,border:`1px solid ${g.border}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{fontWeight:700}}>{r.name}</span>
+                <span style={{color:g.t2,fontSize:12}}>{r.date}</span>
+              </div>
+              <div style={{marginBottom:4}}>{"⭐".repeat(r.stars)}</div>
+              {r.comment&&<div style={{color:g.t2,fontSize:14}}>{r.comment}</div>}
+            </div>
+          ))}
+        </>)}
+      </div>
+
+      <button onClick={()=>{setDefaultDisc(0);setShowAdd(true);}}
+        style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:20,padding:"13px 26px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn,boxShadow:"0 4px 20px #f0a50066",width:"calc(100% - 80px)",maxWidth:280}}>
+        {u.addPostBtn}
+      </button>
+    </div>
+  );
+}
+
+function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,area,setArea,lang="ar"}){
+  const u=UI[lang]||UI.ar;
+  const areas=lang==="fr"?AREAS_FR:AREAS_AR;
+  const allLabel=lang==="fr"?"Tous quartiers":"كل الأحياء";
+  const cat=CATS.find(c=>c.id===catId);
+  const[fDeliv,setFDeliv]=useState(false);
+  let list=shops.filter(s=>s.category===catId);
+  if(area!==allLabel&&area!=="كل الأحياء")list=list.filter(s=>s.area===area);
+  if(fDeliv)list=list.filter(s=>s.hasDelivery);
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:`linear-gradient(160deg,${cat?.color}44,${g.bg2})`,padding:"16px 16px 0",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>{u.back}</button>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8}}>
+          <div style={{fontSize:20,fontWeight:800}}>{cat?.icon} {lang==="fr"?cat?.fr:cat?.ar}</div>
+          <button onClick={()=>setFDeliv(!fDeliv)}
+            style={{background:fDeliv?"linear-gradient(135deg,#06b6d4,#0284c7)":g.bg3,border:"none",borderRadius:20,padding:"6px 12px",color:fDeliv?"#fff":g.t2,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            {u.delivery}
+          </button>
+        </div>
+        <div style={{display:"flex",gap:6,overflowX:"auto",padding:"10px 0 14px",scrollbarWidth:"none"}}>
+          {areas.map(a=>(
+            <button key={a} onClick={()=>setArea(a)}
+              style={{background:area===a?`linear-gradient(135deg,${cat?.color},${cat?.color}aa)`:g.bg3,border:"none",borderRadius:20,padding:"6px 12px",color:g.text,fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontFamily:g.fn,fontWeight:area===a?700:400}}>
+              {a}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {list.length===0?
+          <div style={{textAlign:"center",padding:"60px 20px",color:g.t2}}><div style={{fontSize:56,marginBottom:12}}>{cat?.icon}</div><div style={{fontSize:16}}>{lang==="fr"?"Aucune boutique ici":"ما كاين محل بعد"}</div></div>
+        :list.map(shop=>(
+          <div key={shop.id} onClick={()=>onSelect(shop)}
+            style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${shop.plan==="premium"?"#f0a50033":g.border}`,cursor:"pointer",boxShadow:g.sh}}>
+            <div style={{display:"flex",gap:12,alignItems:"center"}}>
+              <div style={{background:`${cat?.color}22`,borderRadius:14,width:52,height:52,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{cat?.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontWeight:800}}>{shop.name}</span>
+                  {shop.verified&&<span style={{color:"#00ff88",fontSize:12}}>✅</span>}
+                  {shop.hasDelivery&&<span style={{fontSize:11,color:"#06b6d4"}}>🛵</span>}
+                </div>
+                <div style={{color:g.t2,fontSize:12,marginTop:2}}>📍 {shop.area||"—"} • ⭐ {shop.reviews?.length?(shop.reviews.reduce((a,r)=>a+r.stars,0)/shop.reviews.length).toFixed(1):shop.rating}</div>
+                <div style={{fontSize:11,color:g.t2,marginTop:2}}>⏰ {shop.hours} • {shop.products.filter(p=>!p.status||p.status==="approved").length}</div>
+              </div>
+              <button onClick={e=>{e.stopPropagation();toggleFav(shop.id);}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer"}}>{favorites.includes(shop.id)?"❤️":"🤍"}</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DoctorScreen({onBack,doctors,onAdd,g}){
+  const[showReg,setShowReg]=useState(false);
+  const[df,setDf]=useState({name:"",specialty:"طب عام",phone:"",hours:"08:00-16:00",days:"السبت-الخميس",price:1000});
+  const[sel,setSel]=useState(null);
+  const[bk,setBk]=useState({name:"",phone:"",date:"",time:""});
+  const[done,setDone]=useState(false);
+  const[filter,setFilter]=useState("all");
+  const filtered=filter==="all"?doctors:doctors.filter(d=>d.specialty===filter);
+
+  if(done&&sel)return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{fontSize:72,marginBottom:16}}>✅</div>
+      <div style={{fontSize:22,fontWeight:800,color:"#00ff88",marginBottom:16}}>تم الحجز!</div>
+      <button onClick={()=>{setDone(false);setSel(null);setBk({name:"",phone:"",date:"",time:""});}} style={{marginTop:20,background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:"12px 32px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>حجز آخر</button>
+      <button onClick={onBack} style={{marginTop:10,background:g.bg3,border:"none",borderRadius:14,padding:"12px 32px",color:g.t2,fontSize:14,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+    </div>
+  );
+
+  if(sel)return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:`linear-gradient(160deg,#06b6d444,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:18,fontWeight:800,marginTop:8}}>📅 احجز موعد — {sel.name}</div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {[["الاسم *","name","text"],["الهاتف *","phone","text"]].map(([pl,k,tp])=>(
+          <input key={k} placeholder={pl} type={tp} value={bk[k]} onChange={e=>setBk({...bk,[k]:e.target.value})}
+            style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+        ))}
+        <input type="date" value={bk.date} onChange={e=>setBk({...bk,date:e.target.value})}
+          style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:12,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
+          {TIMES.map(tm=>(
+            <button key={tm} onClick={()=>setBk({...bk,time:tm})}
+              style={{background:bk.time===tm?"linear-gradient(135deg,#f0a500,#e67e00)":g.bg3,border:"none",borderRadius:10,padding:"10px 4px",color:g.text,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+              {tm}
+            </button>
+          ))}
+        </div>
+        <button onClick={()=>{if(!bk.name||!bk.phone||!bk.date||!bk.time)return;setDone(true);}}
+          style={{width:"100%",background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+          تأكيد الحجز ✓
+        </button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      {showReg&&(
+        <Modal onClose={()=>setShowReg(false)} g={g}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+            <div style={{fontSize:17,fontWeight:800,color:"#06b6d4"}}>🩺 تسجيل طبيب</div>
+            <button onClick={()=>setShowReg(false)} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+          </div>
+          {[["الاسم *","name","text"],["الهاتف *","phone","text"],["سعر الكشف","price","number"],["أوقات العمل","hours","text"]].map(([pl,k,tp])=>(
+            <input key={k} placeholder={pl} type={tp} value={df[k]} onChange={e=>setDf({...df,[k]:e.target.value})}
+              style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+          ))}
+          <select value={df.specialty} onChange={e=>setDf({...df,specialty:e.target.value})}
+            style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:14,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}>
+            {SPECS.filter(s=>s!=="all").map(s=><option key={s} value={s}>{s}</option>)}
+          </select>
+          <button onClick={()=>{if(!df.name||!df.phone)return;onAdd({id:Date.now(),...df,price:Number(df.price)||1000,distance:"—",rating:5,available:true,image:"👨‍⚕️",reviews:[]});setShowReg(false);}}
+            style={{width:"100%",background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            تأكيد ✓
+          </button>
+        </Modal>
+      )}
+      <div style={{background:`linear-gradient(160deg,#06b6d444,${g.bg2})`,padding:"16px 16px 0",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,marginBottom:4}}>
+          <div style={{fontSize:20,fontWeight:800}}>🩺 أطباء أم البواقي</div>
+          <button onClick={()=>setShowReg(true)} style={{background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"7px 14px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>+ سجّل</button>
+        </div>
+        <div style={{display:"flex",gap:8,overflowX:"auto",padding:"8px 0 14px",scrollbarWidth:"none"}}>
+          {SPECS.map(sp=>(
+            <button key={sp} onClick={()=>setFilter(sp)}
+              style={{background:filter===sp?"linear-gradient(135deg,#06b6d4,#0284c7)":g.bg3,border:"none",borderRadius:20,padding:"6px 12px",color:g.text,fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontFamily:g.fn,fontWeight:filter===sp?700:400}}>
+              {sp==="all"?"الكل":sp}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {filtered.map(doc=>(
+          <div key={doc.id} style={{background:g.card,borderRadius:18,padding:16,marginBottom:14,border:`1px solid ${g.border}`}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{fontWeight:800}}>{doc.name}</div><div style={{color:"#06b6d4",fontSize:13}}>{doc.specialty} • {doc.price.toLocaleString()} دج</div></div>
+              <button onClick={()=>setSel(doc)} style={{background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"8px 14px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>احجز موعد</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PharmaScreen({onBack,shops,toggleDuty,g}){
+  const pharmacies=shops.filter(s=>s.category==="pharmacy");
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:`linear-gradient(160deg,#34d39944,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🚨 صيدلية المناوبة</div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {pharmacies.map(p=>(
+          <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${p.onDuty?"#34d39944":g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontWeight:700}}>{p.name}</div><div style={{color:g.t2,fontSize:12}}>⏰ {p.hours}</div></div>
+            <button onClick={()=>toggleDuty(p.id)} style={{background:p.onDuty?"#34d39922":g.bg3,border:`1px solid ${p.onDuty?"#34d399":g.border}`,borderRadius:10,padding:"6px 12px",color:p.onDuty?"#34d399":g.t2,fontSize:12,cursor:"pointer",fontFamily:g.fn,fontWeight:700}}>
+              {p.onDuty?"✓ مناوبة":"تفعيل"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function REScreen({onBack,g}){
+  const[listings,setListings]=useState([]);
+  const[showAdd,setShowAdd]=useState(false);
+  const[f,setF]=useState({title:"",price:"",area:"",location:"",type:"بيع",contact:""});
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      {showAdd&&(
+        <Modal onClose={()=>setShowAdd(false)} g={g}>
+          <div style={{fontSize:17,fontWeight:800,color:"#f87171",marginBottom:12}}>🏘️ نشر إعلان</div>
+          {[["العنوان *","title"],["السعر (دج) *","price"],["الموقع","location"],["رقم الاتصال *","contact"]].map(([pl,k])=>(
+            <input key={k} placeholder={pl} value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})}
+              style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+          ))}
+          <button onClick={()=>{if(!f.title||!f.price||!f.contact)return;setListings([{id:Date.now(),...f},...listings]);setShowAdd(false);}}
+            style={{width:"100%",background:"linear-gradient(135deg,#f87171,#ef4444)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            نشر ✓
+          </button>
+        </Modal>
+      )}
+      <div style={{background:`linear-gradient(160deg,#f8717133,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🏘️ عقارات أم البواقي</div>
+      </div>
+      <div style={{padding:"14px 14px 100px"}}>
+        {listings.map(r=>(
+          <div key={r.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`}}>
+            <div style={{fontWeight:800}}>{r.title}</div>
+            <div style={{color:g.accent,fontWeight:800,marginTop:4}}>{Number(r.price).toLocaleString()} دج</div>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>setShowAdd(true)} style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#f87171,#ef4444)",border:"none",borderRadius:20,padding:"13px 26px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        ➕ انشر إعلانك
+      </button>
+    </div>
+  );
+}
+
+function OffersScreen({onBack,shops,g,lang="ar"}){
+  const u=UI[lang]||UI.ar;
+  const offers=shops.filter(s=>s.discount>0||s.products.some(p=>Number(p.discount)>0));
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:`linear-gradient(135deg,#ff6b3533,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>{u.back}</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>{u.offers} ({offers.length})</div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {offers.map(shop=>(
+          <div key={shop.id} style={{background:g.card,borderRadius:18,padding:16,marginBottom:12,border:"1px solid #ff6b3544"}}>
+            <div style={{fontWeight:800}}>{shop.name}</div>
+            <div style={{color:g.t2,fontSize:13,marginTop:4}}>{shop.offerText||`${shop.discount}%`}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CompareScreen({onBack,shops,g}){
+  const[q,setQ]=useState("");
+  const results=q.length>=2?shops.flatMap(s=>s.products.filter(p=>p.name.includes(q)&&(!p.status||p.status==="approved")).map(p=>({...p,shopName:s.name,shopPhone:s.phone,shopCat:s.category}))).sort((a,b)=>a.price-b.price):[];
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:`linear-gradient(135deg,#a78bfa33,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>💰 مقارنة الأسعار</div>
+        <input placeholder="ابحثي عن منتج..." value={q} onChange={e=>setQ(e.target.value)}
+          style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:14,padding:"10px 16px",color:g.text,fontFamily:g.fn,fontSize:14,boxSizing:"border-box",marginTop:12}}/>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {results.map((p,i)=>(
+          <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${i===0?"#00ff8844":g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontWeight:700}}>{p.name}</div><div style={{color:g.t2,fontSize:12}}>{p.shopName}</div></div>
+            <div style={{fontSize:17,fontWeight:900,color:i===0?"#00ff88":g.accent}}>{p.price?.toLocaleString()} دج</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NewScreen({onBack,shops,onSelect,g}){
+  const today=new Date().toDateString();
+  const newS=shops.filter(s=>s.addedDate===today);
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:`linear-gradient(135deg,#00ff8833,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🆕 الجديد اليوم</div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {newS.map(s=>(
+          <div key={s.id} onClick={()=>onSelect(s)} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:"1px solid #00ff8833",cursor:"pointer"}}>
+            <div style={{fontWeight:800}}>{s.name}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FavScreen({onBack,shops,favorites,onSelect,g,toggleFav}){
+  const fav=shops.filter(s=>favorites.includes(s.id));
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>❤️ المفضلة ({fav.length})</div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {fav.map(shop=>(
+          <div key={shop.id} style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div onClick={()=>onSelect(shop)} style={{flex:1,cursor:"pointer",fontWeight:800}}>{shop.name}</div>
+            <button onClick={()=>toggleFav(shop.id)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer"}}>❤️</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminScreen({onBack,shops,onApprove,onReject,reports,g}){
+  const pending=shops.flatMap(s=>s.products.filter(p=>p.status==="pending").map(p=>({...p,shopName:s.name,shopId:s.id})));
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:"linear-gradient(135deg,#7c3aed,#6d28d9)",padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"#fff",fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8,color:"#fff"}}>🛡️ لوحة التحكم ({pending.length})</div>
+      </div>
+      <div style={{padding:"14px 14px 40px"}}>
+        {pending.map(p=>(
+          <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`}}>
+            <div style={{fontWeight:700}}>{p.name} — {p.shopName}</div>
+            <div style={{display:"flex",gap:8,marginTop:10}}>
+              <button onClick={()=>onApprove(p.shopId,p.id)} style={{flex:1,background:"#00cc66",border:"none",borderRadius:12,padding:10,color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>✓ قبول</button>
+              <button onClick={()=>onReject(p.shopId,p.id)} style={{flex:1,background:"#ff4444",border:"none",borderRadius:12,padding:10,color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>✕ رفض</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProfileScreen({onBack,shops,favorites,points,g}){
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>👤 حسابي • 🏆 {points}</div>
+      </div>
+      <div style={{padding:"16px"}}>
+        <div style={{background:g.card,borderRadius:16,padding:16,border:`1px solid ${g.border}`}}>
+          <div>🏪 {shops.length}</div>
+          <div style={{marginTop:8}}>❤️ {favorites.length}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsScreen({onBack,dark,setDark,lang,setLang,g,onDelete}){
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>{UI[lang]?.back||"← رجوع"}</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>⚙️ {lang==="fr"?"Paramètres":"الإعدادات"}</div>
+      </div>
+      <div style={{padding:"16px"}}>
+        <div style={{background:g.card,borderRadius:16,padding:16,marginBottom:14,border:`1px solid ${g.border}`}}>
+          <div style={{fontSize:14,fontWeight:800,marginBottom:12,color:g.accent}}>🌐 {lang==="fr"?"Langue":"اللغة"}</div>
+          <div style={{display:"flex",gap:8}}>
+            {[["ar","🇩🇿 العربية"],["fr","🇫🇷 Français"]].map(([l,lbl])=>(
+              <button key={l} onClick={()=>setLang(l)} style={{flex:1,background:lang===l?"linear-gradient(135deg,#f0a500,#e67e00)":g.bg3,border:"none",borderRadius:12,padding:12,color:lang===l?"#fff":g.t2,cursor:"pointer",fontFamily:g.fn,fontSize:14,fontWeight:lang===l?700:400}}>{lbl}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{background:g.card,borderRadius:16,padding:16,marginBottom:14,border:`1px solid ${g.border}`}}>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setDark(true)} style={{flex:1,background:dark?"#f0a500":g.bg3,border:"none",borderRadius:12,padding:12,color:dark?"#fff":g.t2,cursor:"pointer",fontFamily:g.fn}}>🌙</button>
+            <button onClick={()=>setDark(false)} style={{flex:1,background:!dark?"#f0a500":g.bg3,border:"none",borderRadius:12,padding:12,color:!dark?"#fff":g.t2,cursor:"pointer",fontFamily:g.fn}}>☀️</button>
+          </div>
+        </div>
+        <button onClick={onDelete} style={{width:"100%",background:"#ff444422",border:"1px solid #ff4444",borderRadius:14,padding:14,color:"#ff4444",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>🗑️ {lang==="fr"?"Réinitialiser":"حذف البيانات"}</button>
+      </div>
+    </div>
+  );
+}
+
+function CharityScreen({onBack,g}){
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🤲 الجمعيات الخيرية</div>
+      </div>
+    </div>
+  );
+}
+
+function DeliveryScreen({onBack,drivers,onAdd,onToggle,g}){
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,maxWidth:430,margin:"0 auto"}}>
+      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🛵 الموصّلين ({drivers.length})</div>
+      </div>
+    </div>
+  );
+}
+
+function QuranScreen({onBack,g}){
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>📖 المدارس القرآنية</div>
+      </div>
+    </div>
+  );
+}
+
+export default function DzShop(){
+  const[dark,setDark]=useState(true);
+  const[lang,setLang]=useState("ar");
+  const dir=lang==="fr"?"ltr":"rtl";
+  const u=UI[lang]||UI.ar;
+  const g=G(dark,dir);
+
+  const[screen,setScreen]=useState("home");
+  const[selCat,setSelCat]=useState(null);
+  const[selShop,setSelShop]=useState(null);
+  const[chatShop,setChatShop]=useState(null);
+  const[chatInit,setChatInit]=useState("");
+  const[chats,setChats]=useState({});
+  const[searchQ,setSearchQ]=useState("");
+  const[scanning,setScanning]=useState(false);
+  const[showReg,setShowReg]=useState(false);
+  const[showNotifs,setShowNotifs]=useState(false);
+  const[shops,setShops]=useState([]);
+  const[doctors,setDoctors]=useState([]);
+  const[drivers,setDrivers]=useState([]);
+  const[favorites,setFavorites]=useState([]);
+  const[reports,setReports]=useState([]);
+  const[points,setPoints]=useState(0);
+  const[selArea,setSelArea]=useState("كل الأحياء");
+
+  const NOTIFS=[
+    {icon:"🔔",title:lang==="fr"?"Bienvenue sur DzShop !":"مرحباً في DzShop!",body:lang==="fr"?"Inscrivez votre boutique ou cherchez vos besoins":"سجّلي محلك أو ابحثي عما تحتاجين",time:lang==="fr"?"Maintenant":"الآن"},
+    {icon:"🏥",title:lang==="fr"?"Rappel":"تذكير",body:lang==="fr"?"Prenez rendez-vous médical directement":"احجزي موعد طبي مباشرة",time:lang==="fr"?"Aujourd'hui":"اليوم"},
+  ];
+
+  const sendChat=(sid,text)=>{
+    const tId=Date.now();
+    setChats(c=>({...c,[sid]:[...(c[sid]||[]),{id:tId,from:"user",text}]}));
+    setTimeout(()=>setChats(c=>({...c,[sid]:[...(c[sid]||[]),{id:Date.now(),from:"shop",text:"شكراً! سنرد قريباً 🙏"}]})),1000);
+  };
+  const toggleFav=id=>setFavorites(p=>p.includes(id)?p.filter(f=>f!==id):[...p,id]);
+  const addReport=id=>setReports(p=>[...p,id]);
+  const addPts=n=>setPoints(p=>p+n);
+  const updShop=uShop=>{setShops(s=>s.map(sh=>sh.id===uShop.id?uShop:sh));if(selShop?.id===uShop.id)setSelShop(uShop);};
+  const approveP=(sid,pid)=>setShops(s=>s.map(sh=>sh.id===sid?{...sh,products:sh.products.map(p=>p.id===pid?{...p,status:"approved"}:p)}:sh));
+  const rejectP=(sid,pid)=>setShops(s=>s.map(sh=>sh.id===sid?{...sh,products:sh.products.filter(p=>p.id!==pid)}:sh));
+  const handleScan=()=>{setScanning(true);setTimeout(()=>{setScanning(false);setScreen("search");},1500);};
+  const srch=shops.filter(s=>s.name.includes(searchQ)||s.products.some(p=>p.name.includes(searchQ)&&(!p.status||p.status==="approved")));
+  const pendCnt=shops.reduce((a,s)=>a+s.products.filter(p=>p.status==="pending").length,0);
+
+  if(chatShop)return <ChatScreen key={chatShop.id} shop={chatShop} msgs={chats[chatShop.id]||[]} initial={chatInit} onSend={txt=>sendChat(chatShop.id,txt)} onBack={()=>{setChatShop(null);setChatInit("");}} g={g}/>;
+  if(selShop)return <ShopDetail shop={selShop} onBack={()=>setSelShop(null)} onUpdate={updShop} onReport={addReport} g={g} favorites={favorites} toggleFav={toggleFav} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} addPts={addPts} lang={lang}/>;
+  if(screen==="messages")return <MessagesScreen onBack={()=>setScreen("home")} shops={shops} chats={chats} onOpen={sh=>{setChatInit("");setChatShop(sh);}} g={g}/>;
+  if(screen==="realestate")return <REScreen onBack={()=>setScreen("home")} g={g}/>;
+  if(screen==="doctor")return <DoctorScreen onBack={()=>setScreen("home")} doctors={doctors} onAdd={d=>setDoctors([...doctors,d])} g={g}/>;
+  if(screen==="pharmacy")return <PharmaScreen onBack={()=>setScreen("home")} shops={shops} toggleDuty={id=>setShops(s=>s.map(sh=>sh.id===id?{...sh,onDuty:!sh.onDuty}:sh))} g={g}/>;
+  if(screen==="charity")return <CharityScreen onBack={()=>setScreen("home")} g={g}/>;
+  if(screen==="delivery")return <DeliveryScreen onBack={()=>setScreen("home")} drivers={drivers} onAdd={d=>setDrivers([d,...drivers])} onToggle={id=>setDrivers(ds=>ds.map(x=>x.id===id?{...x,available:!x.available}:x))} g={g}/>;
+  if(screen==="quran")return <QuranScreen onBack={()=>setScreen("home")} g={g}/>;
+  if(screen==="category"&&selCat)return <CatScreen catId={selCat} onBack={()=>{setScreen("home");setSelCat(null);}} shops={shops} onSelect={s=>setSelShop(s)} g={g} favorites={favorites} toggleFav={toggleFav} area={selArea} setArea={setSelArea} lang={lang}/>;
+  if(screen==="settings")return <SettingsScreen onBack={()=>setScreen("home")} dark={dark} setDark={setDark} lang={lang} setLang={setLang} g={g} onDelete={()=>{setShops([]);setDoctors([]);setDrivers([]);setChats({});setScreen("home");}}/>;
+  if(screen==="admin")return <AdminScreen onBack={()=>setScreen("home")} shops={shops} onApprove={approveP} onReject={rejectP} reports={reports} g={g}/>;
+  if(screen==="favorites")return <FavScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} onSelect={s=>setSelShop(s)} g={g} toggleFav={toggleFav}/>;
+  if(screen==="offers")return <OffersScreen onBack={()=>setScreen("home")} shops={shops} g={g} lang={lang}/>;
+  if(screen==="compare")return <CompareScreen onBack={()=>setScreen("home")} shops={shops} g={g}/>;
+  if(screen==="new")return <NewScreen onBack={()=>setScreen("home")} shops={shops} onSelect={s=>setSelShop(s)} g={g}/>;
+  if(screen==="profile")return <ProfileScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} points={points} g={g}/>;
+
+  return(
+    <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,maxWidth:430,margin:"0 auto",transition:"all 0.3s"}}>
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+      {showReg&&<RegShopModal onClose={()=>setShowReg(false)} onReg={s=>{setShops([...shops,s]);setShowReg(false);}} g={g} lang={lang}/>}
+
+      {showNotifs&&(
+        <div style={{position:"fixed",inset:0,background:"#000b",zIndex:998,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+          <div style={{background:g.card,borderRadius:"24px 24px 0 0",padding:"24px 20px 44px",width:"100%",maxWidth:430,border:`1px solid ${g.border}`,direction:g.dir,fontFamily:g.fn,color:g.text,maxHeight:"65vh",overflowY:"auto"}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}>
+              <div style={{fontSize:17,fontWeight:800}}>🔔</div>
+              <button onClick={()=>setShowNotifs(false)} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+            </div>
+            {NOTIFS.map((n,i)=>(
+              <div key={i} style={{background:g.bg3,borderRadius:14,padding:14,marginBottom:10,display:"flex",gap:12}}>
+                <div style={{fontSize:26,flexShrink:0}}>{n.icon}</div>
+                <div><div style={{fontWeight:700,fontSize:14}}>{n.title}</div><div style={{color:g.t2,fontSize:13,marginTop:3}}>{n.body}</div><div style={{color:g.t2,fontSize:11,marginTop:4}}>{n.time}</div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{background:g.card,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${g.border}`,position:"sticky",top:0,zIndex:100,boxShadow:g.sh}}>
+        <div onClick={()=>setScreen("profile")} style={{cursor:"pointer"}}>
+          <div style={{fontSize:20,fontWeight:900,background:"linear-gradient(135deg,#f0a500,#ff6b35)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>DzShop 🛍️</div>
+          <div style={{fontSize:11,color:g.t2}}>📍 {lang==="fr"?"Oum El Bouaghi":"أم البواقي"}</div>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <button onClick={()=>setLang(l=>l==="ar"?"fr":"ar")} style={{background:g.bg3,border:`1px solid ${g.border}`,borderRadius:12,padding:"4px 8px",color:g.accent,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:g.fn}}>
+            {lang==="ar"?"FR":"عربي"}
+          </button>
+          {points>0&&<div style={{background:"linear-gradient(135deg,#f0a500,#e67e00)",borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:700,color:"#fff"}}>🏆 {points}</div>}
+          <button onClick={()=>setDark(!dark)} style={{background:"none",border:"none",fontSize:18,cursor:"pointer"}}>{dark?"☀️":"🌙"}</button>
+          <button onClick={()=>setShowNotifs(true)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",position:"relative"}}>
+            🔔<div style={{position:"absolute",top:-2,right:-2,background:"#ff4444",borderRadius:"50%",width:8,height:8}}/>
+          </button>
+          {pendCnt>0&&<button onClick={()=>setScreen("admin")} style={{background:"linear-gradient(135deg,#7c3aed,#6d28d9)",border:"none",borderRadius:20,padding:"4px 10px",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>🛡️ {pendCnt}</button>}
+          <button onClick={()=>setScreen("settings")} style={{background:"none",border:"none",fontSize:20,cursor:"pointer"}}>⚙️</button>
+        </div>
+      </div>
+
+      <div style={{padding:"10px 14px",background:g.bg2,borderBottom:`1px solid ${g.border}`}}>
+        <div style={{display:"flex",gap:8}}>
+          <input placeholder={u.searchPh} value={searchQ}
+            onChange={e=>{setSearchQ(e.target.value);setScreen(e.target.value?"search":"home");}}
+            style={{flex:1,background:g.bg,border:`1px solid ${g.border}`,borderRadius:14,padding:"10px 16px",color:g.text,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+          <button onClick={handleScan} style={{background:scanning?"linear-gradient(135deg,#00ff88,#00cc66)":"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:"0 16px",color:"#fff",fontSize:20,cursor:"pointer"}}>
+            {scanning?"⏳":"📷"}
+          </button>
+        </div>
+        {scanning&&<div style={{background:"#00ff8811",border:"1px solid #00ff8833",borderRadius:10,padding:8,textAlign:"center",fontSize:13,color:"#00ff88",marginTop:8}}>{u.scanning}</div>}
+      </div>
+
+      {screen==="home"&&(
+        <div style={{padding:"14px 14px 100px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+            <button onClick={()=>setScreen("doctor")} style={{background:"linear-gradient(135deg,#06b6d422,#0284c722)",border:"1px solid #06b6d444",borderRadius:16,padding:"12px",color:g.text,cursor:"pointer",fontFamily:g.fn,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:24}}>🩺</span>
+              <div style={{textAlign:lang==="fr"?"left":"right"}}><div style={{fontSize:13,fontWeight:800}}>{u.doctorTitle}</div><div style={{fontSize:11,color:g.t2,marginTop:1}}>{doctors.length} {u.doctorSub}</div></div>
+            </button>
+            <button onClick={()=>setScreen("pharmacy")} style={{background:"linear-gradient(135deg,#34d39922,#05966922)",border:"1px solid #34d39944",borderRadius:16,padding:"12px",color:g.text,cursor:"pointer",fontFamily:g.fn,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:24}}>🚨</span>
+              <div style={{textAlign:lang==="fr"?"left":"right"}}><div style={{fontSize:13,fontWeight:800}}>{u.pharmaTitle}</div><div style={{fontSize:11,color:g.t2,marginTop:1}}>{u.pharmaSub}</div></div>
+            </button>
+          </div>
+
+          <div style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto",scrollbarWidth:"none"}}>
+            {[
+              {icon:"🏷️",label:u.offers,action:()=>setScreen("offers"),c:"#ff6b35"},
+              {icon:"🆕",label:u.newToday,action:()=>setScreen("new"),c:"#00ff88"},
+              {icon:"💰",label:u.compare,action:()=>setScreen("compare"),c:"#a78bfa"},
+              {icon:"🛵",label:u.withDelivery,action:()=>{setSelCat("restaurant");setScreen("category");},c:"#06b6d4"},
+              {icon:"🏍️",label:u.drivers,action:()=>setScreen("delivery"),c:"#0ea5e9"},
+              {icon:"💬",label:u.messages,action:()=>setScreen("messages"),c:"#f0a500"},
+              {icon:"🤲",label:u.charity,action:()=>setScreen("charity"),c:"#10b981"},
+              {icon:"📖",label:u.quran,action:()=>setScreen("quran"),c:"#8b5cf6"},
+            ].map((item,i)=>(
+              <button key={i} onClick={item.action}
+                style={{background:`${item.c}22`,border:`1px solid ${item.c}44`,borderRadius:14,padding:"8px 12px",color:g.text,cursor:"pointer",fontFamily:g.fn,display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap",flexShrink:0}}>
+                <span style={{fontSize:16}}>{item.icon}</span>
+                <span style={{fontSize:11,fontWeight:700}}>{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div style={{fontSize:14,fontWeight:800,marginBottom:12}}>{u.catsTitle}</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"14px 8px",marginBottom:18}}>
+            {CATS.map(cat=>(
+              <div key={cat.id} onClick={()=>{
+                if(cat.id==="realestate"){setScreen("realestate");return;}
+                if(cat.id==="doctor"){setScreen("doctor");return;}
+                if(cat.id==="charity"){setScreen("charity");return;}
+                if(cat.id==="quran"){setScreen("quran");return;}
+                setSelCat(cat.id);setScreen("category");
+              }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer"}}>
+                <div style={{width:62,height:62,borderRadius:"50%",background:`linear-gradient(135deg,${cat.color}33,${cat.color}11)`,border:`2px solid ${cat.color}66`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,boxShadow:`0 3px 10px ${cat.color}22`}}>
+                  {cat.icon}
+                </div>
+                <div style={{fontSize:9,color:g.t2,textAlign:"center",lineHeight:1.3,fontWeight:600,maxWidth:62}}>{lang==="fr"?cat.fr:cat.ar}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{background:"linear-gradient(135deg,#f0a50018,#ff6b3518)",border:"1px solid #f0a50033",borderRadius:18,padding:14,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:14}}>{u.haveShop}</div>
+              <div style={{color:g.t2,fontSize:11,marginTop:2}}>{u.first10Free}</div>
+            </div>
+            <button onClick={()=>setShowReg(true)} style={{background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:12,padding:"8px 14px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+              {u.registerNow}
+            </button>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
+            {[{l:u.statShops,v:shops.length,ic:"🏪",c:g.accent},{l:u.statDoctors,v:doctors.length,ic:"🩺",c:"#06b6d4"},{l:u.statFavs,v:favorites.length,ic:"❤️",c:"#f472b6"},{l:u.statPts,v:points,ic:"🏆",c:"#fbbf24"}].map((s,i)=>(
+              <div key={i} style={{background:g.card,borderRadius:12,padding:"10px 4px",textAlign:"center",border:`1px solid ${g.border}`}}>
+                <div style={{fontSize:18}}>{s.ic}</div>
+                <div style={{fontSize:17,fontWeight:800,color:s.c}}>{s.v}</div>
+                <div style={{fontSize:9,color:g.t2}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {screen==="search"&&(
+        <div style={{padding:"14px 14px 100px"}}>
+          <div style={{fontSize:13,color:g.t2,marginBottom:12}}>"{searchQ}" — {srch.length}</div>
+          {srch.map(shop=>{
+            const cat=CATS.find(c=>c.id===shop.category);
+            const matched=shop.products.filter(p=>p.name.includes(searchQ)&&(!p.status||p.status==="approved"));
+            return(
+              <div key={shop.id} onClick={()=>setSelShop(shop)}
+                style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${g.border}`,cursor:"pointer",boxShadow:g.sh}}>
+                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:matched.length>0?10:0}}>
+                  <div style={{background:`${cat?.color}22`,borderRadius:12,width:42,height:42,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{cat?.icon}</div>
+                  <div style={{flex:1}}><div style={{fontWeight:800}}>{shop.name}</div><div style={{color:g.t2,fontSize:12}}>{lang==="fr"?cat?.fr:cat?.ar} • 📍 {shop.area||"—"}</div></div>
+                </div>
+                {matched.map(p=>(
+                  <div key={p.id} style={{background:g.bg,borderRadius:10,padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      {renderMediaPreview(p,28)}
+                      <span style={{fontSize:14}}>{p.name}</span>
+                    </div>
+                    <span style={{color:g.accent,fontWeight:700,fontSize:13}}>{p.price?.toLocaleString()} {u.da}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:g.card,borderTop:`1px solid ${g.border}`,padding:"8px 0 14px",display:"flex",justifyContent:"space-around",boxShadow:g.sh}}>
+        {[
+          {icon:"🏠",label:u.navHome,action:()=>{setScreen("home");setSelCat(null);setSearchQ("");}},
+          {icon:"🔍",label:u.navSearch,action:()=>setScreen("search")},
+          {icon:"🏷️",label:u.navOffers,action:()=>setScreen("offers")},
+          {icon:"❤️",label:u.navFav,action:()=>setScreen("favorites")},
+          {icon:"👤",label:u.navProfile,action:()=>setScreen("profile")},
+        ].map((nav,i)=>(
+          <button key={i} onClick={nav.action}
+            style={{background:"none",border:"none",color:g.t2,fontSize:10,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,fontFamily:g.fn,minWidth:46}}>
+            <span style={{fontSize:20}}>{nav.icon}</span>
+            {nav.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
