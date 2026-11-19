@@ -23,8 +23,6 @@ const CATS = [
   {id:"quran",ar:"مدارس قرآنية",fr:"Écoles Coraniques",icon:"📖",color:"#8b5cf6"},
 ];
 
-const AREAS_AR=["كل الأحياء","المركز","حي النصر","حي الورود","حي السلام","عين البيضاء","عين مليلة"];
-const AREAS_FR=["Tous quartiers","Centre","Hai Ennasr","Hai El Ouroud","Hai Essalem","Aïn Beïda","Aïn M'lila"];
 const SPECS=["all","طب عام","طب أطفال","طب الأسنان","أمراض النساء","قلب وأوعية","عيون","جلدية"];
 const TIMES=["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00"];
 
@@ -32,8 +30,12 @@ const UI = {
   ar: {
     back: "← رجوع",
     da: "دج",
-    searchPh: "🔍 ابحث عن منتج أو محل...",
-    scanning: "🤖 AI يتعرف على المنتج...",
+    allAreas: "كل الأحياء",
+    areaPh: "اكتب حيك / مدينتك / مكانك (مثال: عين فكرون، المركز) *",
+    searchPh: "🔍 ابحث عن منتج، محل أو حي...",
+    scanning: "🤖 جاري تحليل الصورة والبحث في المحلات...",
+    photoSearchTitle: "البحث بالصورة",
+    photoSearchSub: "المنتجات والمحلات المتوفرة",
     doctorTitle: "احجز موعد طبي",
     doctorSub: "طبيب",
     pharmaTitle: "صيدلية المناوبة",
@@ -61,7 +63,6 @@ const UI = {
     navProfile: "حسابي",
     postsTab: "📝 المنشورات",
     discountsTab: "🏷️ التخفيضات",
-    reviewsTab: "⭐ التقييمات",
     addPostBtn: "➕ أضف منشور",
     addDiscountBtn: "🏷️ أضف تخفيض",
     noPosts: "ما كاين منشور بعد — اضغطي ➕",
@@ -95,8 +96,12 @@ const UI = {
   fr: {
     back: "Retour →",
     da: "DA",
-    searchPh: "🔍 Rechercher un produit ou une boutique...",
-    scanning: "🤖 IA en cours d'analyse...",
+    allAreas: "Tous les lieux",
+    areaPh: "Votre quartier / ville / lieu (ex: Aïn Fakroun, Centre) *",
+    searchPh: "🔍 Rechercher produit, boutique ou quartier...",
+    scanning: "🤖 Analyse de l'image et recherche...",
+    photoSearchTitle: "Recherche par photo",
+    photoSearchSub: "Produits et boutiques disponibles",
     doctorTitle: "Rendez-vous médical",
     doctorSub: "médecin(s)",
     pharmaTitle: "Pharmacie de garde",
@@ -124,7 +129,6 @@ const UI = {
     navProfile: "Profil",
     postsTab: "📝 Publications",
     discountsTab: "🏷️ Promotions",
-    reviewsTab: "⭐ Avis",
     addPostBtn: "➕ Publier",
     addDiscountBtn: "🏷️ Ajouter promo",
     noPosts: "Aucune publication — cliquez sur ➕",
@@ -369,8 +373,7 @@ function AddProductModal({onClose,onAdd,onSubscribePro,isPro,count,defaultDiscou
 
 function RegShopModal({onClose,onReg,g,lang="ar"}){
   const u=UI[lang]||UI.ar;
-  const areas=lang==="fr"?AREAS_FR.filter(a=>a!=="Tous quartiers"):AREAS_AR.filter(a=>a!=="كل الأحياء");
-  const[f,setF]=useState({name:"",category:"supermarket",phone:"",desc:"",hours:"09:00 - 21:00",days:"السبت - الخميس",hasDelivery:false,area:areas[0]||"المركز",discount:0,offerText:""});
+  const[f,setF]=useState({name:"",category:"supermarket",phone:"",desc:"",hours:"09:00 - 21:00",days:"السبت - الخميس",hasDelivery:false,area:"",discount:0,offerText:""});
   const today=new Date().toDateString();
   const inp=(pl,k,tp="text")=>(
     <input key={k} placeholder={pl} type={tp} value={f[k]} onChange={e=>setF({...f,[k]:tp==="number"?Number(e.target.value):e.target.value})}
@@ -391,10 +394,10 @@ function RegShopModal({onClose,onReg,g,lang="ar"}){
       <div style={{background:"#00ff8811",border:"1px solid #00ff8833",borderRadius:12,padding:10,marginBottom:14,fontSize:13,color:"#00ff88",textAlign:"center"}}>✅ {u.first10Free}</div>
       {inp(lang==="fr"?"Nom de la boutique *":"اسم المحل *","name")}
       {inp(lang==="fr"?"Téléphone *":"رقم الهاتف *","phone")}
+      {inp(u.areaPh,"area")}
       {inp(lang==="fr"?"Description":"وصف المحل","desc")}
       {inp("09:00 - 21:00","hours")}
       {sel("category",CATS.filter(c=>c.id!=="doctor"&&c.id!=="realestate"))}
-      {sel("area",areas)}
       {sel("days",lang==="fr"?["Tous les jours","Samedi - Jeudi","Samedi - Vendredi","Lundi - Vendredi"]:["كل أيام الأسبوع","السبت - الخميس","السبت - الجمعة","الإثنين - الجمعة"])}
       <div style={{display:"flex",gap:8,marginBottom:12}}>
         {inp(lang==="fr"?"Remise %":"تخفيض %","discount","number")}
@@ -407,7 +410,7 @@ function RegShopModal({onClose,onReg,g,lang="ar"}){
           {f.hasDelivery?(lang==="fr"?"✓ Oui":"✓ نعم"):(lang==="fr"?"Non":"لا")}
         </button>
       </div>
-      <button onClick={()=>{if(!f.name||!f.phone)return;onReg({id:Date.now(),...f,distance:"—",rating:5,verified:false,plan:"free",onDuty:false,products:[],reviews:[],addedDate:today});onClose();}}
+      <button onClick={()=>{if(!f.name.trim()||!f.phone.trim()||!f.area.trim())return;onReg({id:Date.now(),...f,name:f.name.trim(),area:f.area.trim(),distance:"—",rating:5,verified:false,plan:"free",onDuty:false,products:[],reviews:[],addedDate:today});onClose();}}
         style={{width:"100%",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
         {lang==="fr"?"S'inscrire gratuitement ✓":"سجّل الآن مجاناً ✓"}
       </button>
@@ -748,15 +751,19 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,onChat,
   );
 }
 
-function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,area,setArea,lang="ar"}){
+function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,lang="ar"}){
   const u=UI[lang]||UI.ar;
-  const areas=lang==="fr"?AREAS_FR:AREAS_AR;
-  const allLabel=lang==="fr"?"Tous quartiers":"كل الأحياء";
   const cat=CATS.find(c=>c.id===catId);
+  const[area,setArea]=useState("ALL");
   const[fDeliv,setFDeliv]=useState(false);
-  let list=shops.filter(s=>s.category===catId);
-  if(area!==allLabel&&area!=="كل الأحياء")list=list.filter(s=>s.area===area);
+
+  const catShops=shops.filter(s=>s.category===catId);
+  const dynamicAreas=Array.from(new Set(catShops.map(s=>(s.area||"").trim()).filter(Boolean)));
+
+  let list=catShops;
+  if(area!=="ALL")list=list.filter(s=>(s.area||"").trim()===area);
   if(fDeliv)list=list.filter(s=>s.hasDelivery);
+
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
       <div style={{background:`linear-gradient(160deg,${cat?.color}44,${g.bg2})`,padding:"16px 16px 0",borderBottom:`1px solid ${g.border}`}}>
@@ -769,10 +776,14 @@ function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,area,setAr
           </button>
         </div>
         <div style={{display:"flex",gap:6,overflowX:"auto",padding:"10px 0 14px",scrollbarWidth:"none"}}>
-          {areas.map(a=>(
+          <button onClick={()=>setArea("ALL")}
+            style={{background:area==="ALL"?`linear-gradient(135deg,${cat?.color},${cat?.color}aa)`:g.bg3,border:"none",borderRadius:20,padding:"6px 12px",color:g.text,fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontFamily:g.fn,fontWeight:area==="ALL"?700:400}}>
+            {u.allAreas}
+          </button>
+          {dynamicAreas.map(a=>(
             <button key={a} onClick={()=>setArea(a)}
               style={{background:area===a?`linear-gradient(135deg,${cat?.color},${cat?.color}aa)`:g.bg3,border:"none",borderRadius:20,padding:"6px 12px",color:g.text,fontSize:11,cursor:"pointer",whiteSpace:"nowrap",fontFamily:g.fn,fontWeight:area===a?700:400}}>
-              {a}
+              📍 {a}
             </button>
           ))}
         </div>
@@ -805,7 +816,7 @@ function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,area,setAr
 
 function DoctorScreen({onBack,doctors,onAdd,g}){
   const[showReg,setShowReg]=useState(false);
-  const[df,setDf]=useState({name:"",specialty:"طب عام",phone:"",hours:"08:00-16:00",days:"السبت-الخميس",price:1000});
+  const[df,setDf]=useState({name:"",specialty:"طب عام",phone:"",area:"",hours:"08:00-16:00",days:"السبت-الخميس",price:1000});
   const[sel,setSel]=useState(null);
   const[bk,setBk]=useState({name:"",phone:"",date:"",time:""});
   const[done,setDone]=useState(false);
@@ -858,7 +869,7 @@ function DoctorScreen({onBack,doctors,onAdd,g}){
             <div style={{fontSize:17,fontWeight:800,color:"#06b6d4"}}>🩺 تسجيل طبيب</div>
             <button onClick={()=>setShowReg(false)} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
           </div>
-          {[["الاسم *","name","text"],["الهاتف *","phone","text"],["سعر الكشف","price","number"],["أوقات العمل","hours","text"]].map(([pl,k,tp])=>(
+          {[["الاسم *","name","text"],["الهاتف *","phone","text"],["الحي / العنوان *","area","text"],["سعر الكشف","price","number"],["أوقات العمل","hours","text"]].map(([pl,k,tp])=>(
             <input key={k} placeholder={pl} type={tp} value={df[k]} onChange={e=>setDf({...df,[k]:e.target.value})}
               style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
           ))}
@@ -875,7 +886,7 @@ function DoctorScreen({onBack,doctors,onAdd,g}){
       <div style={{background:`linear-gradient(160deg,#06b6d444,${g.bg2})`,padding:"16px 16px 0",borderBottom:`1px solid ${g.border}`}}>
         <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,marginBottom:4}}>
-          <div style={{fontSize:20,fontWeight:800}}>🩺 أطباء أم البواقي</div>
+          <div style={{fontSize:20,fontWeight:800}}>🩺 الأطباء</div>
           <button onClick={()=>setShowReg(true)} style={{background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"7px 14px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>+ سجّل</button>
         </div>
         <div style={{display:"flex",gap:8,overflowX:"auto",padding:"8px 0 14px",scrollbarWidth:"none"}}>
@@ -891,7 +902,11 @@ function DoctorScreen({onBack,doctors,onAdd,g}){
         {filtered.map(doc=>(
           <div key={doc.id} style={{background:g.card,borderRadius:18,padding:16,marginBottom:14,border:`1px solid ${g.border}`}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><div style={{fontWeight:800}}>{doc.name}</div><div style={{color:"#06b6d4",fontSize:13}}>{doc.specialty} • {doc.price.toLocaleString()} دج</div></div>
+              <div>
+                <div style={{fontWeight:800}}>{doc.name}</div>
+                <div style={{color:"#06b6d4",fontSize:13}}>{doc.specialty} • {doc.price.toLocaleString()} دج</div>
+                {doc.area&&<div style={{color:g.t2,fontSize:12}}>📍 {doc.area}</div>}
+              </div>
               <button onClick={()=>setSel(doc)} style={{background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"8px 14px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>احجز موعد</button>
             </div>
           </div>
@@ -912,7 +927,7 @@ function PharmaScreen({onBack,shops,toggleDuty,g}){
       <div style={{padding:"14px 14px 40px"}}>
         {pharmacies.map(p=>(
           <div key={p.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:10,border:`1px solid ${p.onDuty?"#34d39944":g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div><div style={{fontWeight:700}}>{p.name}</div><div style={{color:g.t2,fontSize:12}}>⏰ {p.hours}</div></div>
+            <div><div style={{fontWeight:700}}>{p.name}</div><div style={{color:g.t2,fontSize:12}}>📍 {p.area||"—"} • ⏰ {p.hours}</div></div>
             <button onClick={()=>toggleDuty(p.id)} style={{background:p.onDuty?"#34d39922":g.bg3,border:`1px solid ${p.onDuty?"#34d399":g.border}`,borderRadius:10,padding:"6px 12px",color:p.onDuty?"#34d399":g.t2,fontSize:12,cursor:"pointer",fontFamily:g.fn,fontWeight:700}}>
               {p.onDuty?"✓ مناوبة":"تفعيل"}
             </button>
@@ -932,7 +947,7 @@ function REScreen({onBack,g}){
       {showAdd&&(
         <Modal onClose={()=>setShowAdd(false)} g={g}>
           <div style={{fontSize:17,fontWeight:800,color:"#f87171",marginBottom:12}}>🏘️ نشر إعلان</div>
-          {[["العنوان *","title"],["السعر (دج) *","price"],["الموقع","location"],["رقم الاتصال *","contact"]].map(([pl,k])=>(
+          {[["العنوان *","title"],["السعر (دج) *","price"],["الحي / المكان *","location"],["رقم الاتصال *","contact"]].map(([pl,k])=>(
             <input key={k} placeholder={pl} value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})}
               style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
           ))}
@@ -944,12 +959,13 @@ function REScreen({onBack,g}){
       )}
       <div style={{background:`linear-gradient(160deg,#f8717133,${g.bg2})`,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
         <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
-        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🏘️ عقارات أم البواقي</div>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🏘️ العقارات</div>
       </div>
       <div style={{padding:"14px 14px 100px"}}>
         {listings.map(r=>(
           <div key={r.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`}}>
             <div style={{fontWeight:800}}>{r.title}</div>
+            {r.location&&<div style={{color:g.t2,fontSize:12,marginTop:2}}>📍 {r.location}</div>}
             <div style={{color:g.accent,fontWeight:800,marginTop:4}}>{Number(r.price).toLocaleString()} دج</div>
           </div>
         ))}
@@ -974,7 +990,7 @@ function OffersScreen({onBack,shops,g,lang="ar"}){
         {offers.map(shop=>(
           <div key={shop.id} style={{background:g.card,borderRadius:18,padding:16,marginBottom:12,border:"1px solid #ff6b3544"}}>
             <div style={{fontWeight:800}}>{shop.name}</div>
-            <div style={{color:g.t2,fontSize:13,marginTop:4}}>{shop.offerText||`${shop.discount}%`}</div>
+            <div style={{color:g.t2,fontSize:13,marginTop:4}}>📍 {shop.area} • {shop.offerText||`${shop.discount}%`}</div>
           </div>
         ))}
       </div>
@@ -1018,6 +1034,7 @@ function NewScreen({onBack,shops,onSelect,g}){
         {newS.map(s=>(
           <div key={s.id} onClick={()=>onSelect(s)} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:"1px solid #00ff8833",cursor:"pointer"}}>
             <div style={{fontWeight:800}}>{s.name}</div>
+            {s.area&&<div style={{color:g.t2,fontSize:12}}>📍 {s.area}</div>}
           </div>
         ))}
       </div>
@@ -1114,34 +1131,146 @@ function SettingsScreen({onBack,dark,setDark,lang,setLang,g,onDelete}){
 }
 
 function CharityScreen({onBack,g}){
+  const[orgs,setOrgs]=useState([]);
+  const[showAdd,setShowAdd]=useState(false);
+  const[f,setF]=useState({name:"",phone:"",area:"",desc:""});
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      {showAdd&&(
+        <Modal onClose={()=>setShowAdd(false)} g={g}>
+          <div style={{fontSize:17,fontWeight:800,color:"#10b981",marginBottom:12}}>🤲 تسجيل جمعية</div>
+          {[["اسم الجمعية *","name"],["رقم الهاتف *","phone"],["الحي / المكان *","area"],["وصف النشاط","desc"]].map(([pl,k])=>(
+            <input key={k} placeholder={pl} value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})}
+              style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+          ))}
+          <button onClick={()=>{if(!f.name||!f.phone)return;setOrgs([{id:Date.now(),...f},...orgs]);setShowAdd(false);}}
+            style={{width:"100%",background:"linear-gradient(135deg,#10b981,#059669)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            تسجيل ✓
+          </button>
+        </Modal>
+      )}
       <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
         <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
-        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🤲 الجمعيات الخيرية</div>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🤲 الجمعيات الخيرية ({orgs.length})</div>
       </div>
+      <div style={{padding:"14px 14px 100px"}}>
+        {orgs.map(o=>(
+          <div key={o.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`}}>
+            <div style={{fontWeight:800}}>{o.name}</div>
+            <div style={{color:g.t2,fontSize:12}}>📍 {o.area} • 📞 {o.phone}</div>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>setShowAdd(true)} style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#10b981,#059669)",border:"none",borderRadius:20,padding:"13px 26px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        🤲 سجّل جمعية
+      </button>
     </div>
   );
 }
 
 function DeliveryScreen({onBack,drivers,onAdd,onToggle,g}){
+  const empty={name:"",phone:"",vehicle:"🛵",areasText:"",areas:[],price:200,hours:"08:00 - 22:00"};
+  const[showAdd,setShowAdd]=useState(false);
+  const[f,setF]=useState(empty);
+  const[areaFilter,setAreaFilter]=useState("ALL");
+  const allAreas=Array.from(new Set(drivers.flatMap(d=>d.areas||[]).filter(Boolean)));
+  const list=areaFilter==="ALL"?drivers:drivers.filter(d=>(d.areas||[]).includes(areaFilter));
+  const inp={width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"};
+
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,maxWidth:430,margin:"0 auto"}}>
+      {showAdd&&(
+        <Modal onClose={()=>setShowAdd(false)} g={g}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+            <div style={{fontSize:17,fontWeight:800,color:"#06b6d4"}}>🛵 سجّل كموصّل</div>
+            <button onClick={()=>setShowAdd(false)} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 10px",color:g.t2,cursor:"pointer",fontSize:16}}>✕</button>
+          </div>
+          <input placeholder="الاسم *" value={f.name} onChange={e=>setF({...f,name:e.target.value})} style={inp}/>
+          <input placeholder="رقم الهاتف *" type="tel" value={f.phone} onChange={e=>setF({...f,phone:e.target.value})} style={inp}/>
+          <input
+            placeholder="الأحياء أو المدن لي توصل فيها (مثال: عين فكرون، المركز) *"
+            value={f.areasText}
+            onChange={e=>{
+              const val=e.target.value;
+              const parsed=val.split(/[,،]/).map(x=>x.trim()).filter(Boolean);
+              setF({...f,areasText:val,areas:parsed});
+            }}
+            style={inp}
+          />
+          <input placeholder="السعر (دج)" type="number" value={f.price} onChange={e=>setF({...f,price:e.target.value})} style={inp}/>
+          <button onClick={()=>{
+            if(!f.name.trim()||!f.phone.trim()||f.areas.length===0)return;
+            onAdd({id:Date.now(),...f,name:f.name.trim(),price:Number(f.price)||0,available:true});
+            setShowAdd(false);setF(empty);
+          }} style={{width:"100%",background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            تسجيل ✓
+          </button>
+        </Modal>
+      )}
       <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
         <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
         <div style={{fontSize:20,fontWeight:800,marginTop:8}}>🛵 الموصّلين ({drivers.length})</div>
+        <div style={{display:"flex",gap:6,overflowX:"auto",paddingTop:10}}>
+          <button onClick={()=>setAreaFilter("ALL")} style={{background:areaFilter==="ALL"?"#06b6d4":g.bg3,border:"none",borderRadius:20,padding:"5px 12px",color:g.text,fontSize:11,cursor:"pointer",fontFamily:g.fn}}>كل الأحياء</button>
+          {allAreas.map(a=>(
+            <button key={a} onClick={()=>setAreaFilter(a)} style={{background:areaFilter===a?"#06b6d4":g.bg3,border:"none",borderRadius:20,padding:"5px 12px",color:g.text,fontSize:11,cursor:"pointer",fontFamily:g.fn}}>📍 {a}</button>
+          ))}
+        </div>
       </div>
+      <div style={{padding:"14px 14px 100px"}}>
+        {list.map(d=>(
+          <div key={d.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontWeight:800}}>{d.name} • {d.price} دج</div>
+              <div style={{color:g.t2,fontSize:12}}>📍 {(d.areas||[]).join("، ")} • 📞 {d.phone}</div>
+            </div>
+            <button onClick={()=>onToggle(d.id)} style={{background:d.available?"#00cc6622":"#ff444422",border:"none",borderRadius:14,padding:"6px 10px",color:d.available?"#00cc66":"#ff4444",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+              {d.available?"🟢 متاح":"🔴 مشغول"}
+            </button>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>setShowAdd(true)} style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:20,padding:"13px 26px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        🛵 سجّل كموصّل
+      </button>
     </div>
   );
 }
 
 function QuranScreen({onBack,g}){
+  const[schools,setSchools]=useState([]);
+  const[showAdd,setShowAdd]=useState(false);
+  const[f,setF]=useState({name:"",phone:"",area:"",teacher:""});
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
+      {showAdd&&(
+        <Modal onClose={()=>setShowAdd(false)} g={g}>
+          <div style={{fontSize:17,fontWeight:800,color:"#8b5cf6",marginBottom:12}}>📖 تسجيل مدرسة قرآنية</div>
+          {[["اسم المدرسة *","name"],["رقم الهاتف *","phone"],["الحي / المكان *","area"],["اسم المعلم","teacher"]].map(([pl,k])=>(
+            <input key={k} placeholder={pl} value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})}
+              style={{width:"100%",background:g.bg,border:`1px solid ${g.border}`,borderRadius:12,padding:12,color:g.text,marginBottom:10,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
+          ))}
+          <button onClick={()=>{if(!f.name||!f.phone)return;setSchools([{id:Date.now(),...f},...schools]);setShowAdd(false);}}
+            style={{width:"100%",background:"linear-gradient(135deg,#8b5cf6,#7c3aed)",border:"none",borderRadius:14,padding:14,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+            تسجيل ✓
+          </button>
+        </Modal>
+      )}
       <div style={{background:g.card,padding:"16px",borderBottom:`1px solid ${g.border}`}}>
         <button onClick={onBack} style={{background:"none",border:"none",color:g.accent,fontSize:16,cursor:"pointer",fontFamily:g.fn}}>← رجوع</button>
-        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>📖 المدارس القرآنية</div>
+        <div style={{fontSize:20,fontWeight:800,marginTop:8}}>📖 المدارس القرآنية ({schools.length})</div>
       </div>
+      <div style={{padding:"14px 14px 100px"}}>
+        {schools.map(s=>(
+          <div key={s.id} style={{background:g.card,borderRadius:16,padding:14,marginBottom:12,border:`1px solid ${g.border}`}}>
+            <div style={{fontWeight:800}}>{s.name}</div>
+            <div style={{color:g.t2,fontSize:12}}>📍 {s.area} • 📞 {s.phone}</div>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>setShowAdd(true)} style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#8b5cf6,#7c3aed)",border:"none",borderRadius:20,padding:"13px 26px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+        📖 سجّل مدرسة
+      </button>
     </div>
   );
 }
@@ -1161,6 +1290,9 @@ export default function DzShop(){
   const[chats,setChats]=useState({});
   const[searchQ,setSearchQ]=useState("");
   const[scanning,setScanning]=useState(false);
+  const[scanPreview,setScanPreview]=useState("");
+  const scanInputRef=useRef(null);
+
   const[showReg,setShowReg]=useState(false);
   const[showNotifs,setShowNotifs]=useState(false);
   const[shops,setShops]=useState([]);
@@ -1169,10 +1301,9 @@ export default function DzShop(){
   const[favorites,setFavorites]=useState([]);
   const[reports,setReports]=useState([]);
   const[points,setPoints]=useState(0);
-  const[selArea,setSelArea]=useState("كل الأحياء");
 
   const NOTIFS=[
-    {icon:"🔔",title:lang==="fr"?"Bienvenue sur DzShop !":"مرحباً في DzShop!",body:lang==="fr"?"Inscrivez votre boutique ou cherchez vos besoins":"سجّلي محلك أو ابحثي عما تحتاجين",time:lang==="fr"?"Maintenant":"الآن"},
+    {icon:"🔔",title:lang==="fr"?"Bienvenue sur DzShop !":"مرحباً في DzShop!",body:lang==="fr"?"Inscrivez votre boutique avec votre propre quartier":"سجّلي محلك واكتبي مكانك وحيك بنفسك",time:lang==="fr"?"Maintenant":"الآن"},
     {icon:"🏥",title:lang==="fr"?"Rappel":"تذكير",body:lang==="fr"?"Prenez rendez-vous médical directement":"احجزي موعد طبي مباشرة",time:lang==="fr"?"Aujourd'hui":"اليوم"},
   ];
 
@@ -1187,8 +1318,32 @@ export default function DzShop(){
   const updShop=uShop=>{setShops(s=>s.map(sh=>sh.id===uShop.id?uShop:sh));if(selShop?.id===uShop.id)setSelShop(uShop);};
   const approveP=(sid,pid)=>setShops(s=>s.map(sh=>sh.id===sid?{...sh,products:sh.products.map(p=>p.id===pid?{...p,status:"approved"}:p)}:sh));
   const rejectP=(sid,pid)=>setShops(s=>s.map(sh=>sh.id===sid?{...sh,products:sh.products.filter(p=>p.id!==pid)}:sh));
-  const handleScan=()=>{setScanning(true);setTimeout(()=>{setScanning(false);setScreen("search");},1500);};
-  const srch=shops.filter(s=>s.name.includes(searchQ)||s.products.some(p=>p.name.includes(searchQ)&&(!p.status||p.status==="approved")));
+
+  const handleImageScan=(e)=>{
+    const file=e.target.files?.[0];
+    if(!file)return;
+    const url=URL.createObjectURL(file);
+    setScanPreview(url);
+    setScanning(true);
+    const cleanName=file.name.replace(/\.[^/.]+$/,"").replace(/[-_]/g," ").trim();
+    setTimeout(()=>{
+      setScanning(false);
+      setSearchQ(cleanName && !/^(img|dsc|photo|screenshot|image|\d+)/i.test(cleanName) ? cleanName : "");
+      setScreen("search");
+    },1200);
+  };
+
+  const qLower=searchQ.trim().toLowerCase();
+  const hasPhotoFilter=Boolean(scanPreview)&&!qLower;
+  const srch=shops.filter(s=>{
+    const shopHasMediaPosts=s.products.some(p=>(!p.status||p.status==="approved")&&(p.images?.length>0||p.videoUrl));
+    if(hasPhotoFilter) return shopHasMediaPosts || s.products.some(p=>!p.status||p.status==="approved");
+    return (
+      s.name.toLowerCase().includes(qLower) ||
+      (s.area||"").toLowerCase().includes(qLower) ||
+      s.products.some(p=>p.name.toLowerCase().includes(qLower)&&(!p.status||p.status==="approved"))
+    );
+  });
   const pendCnt=shops.reduce((a,s)=>a+s.products.filter(p=>p.status==="pending").length,0);
 
   if(chatShop)return <ChatScreen key={chatShop.id} shop={chatShop} msgs={chats[chatShop.id]||[]} initial={chatInit} onSend={txt=>sendChat(chatShop.id,txt)} onBack={()=>{setChatShop(null);setChatInit("");}} g={g}/>;
@@ -1200,8 +1355,8 @@ export default function DzShop(){
   if(screen==="charity")return <CharityScreen onBack={()=>setScreen("home")} g={g}/>;
   if(screen==="delivery")return <DeliveryScreen onBack={()=>setScreen("home")} drivers={drivers} onAdd={d=>setDrivers([d,...drivers])} onToggle={id=>setDrivers(ds=>ds.map(x=>x.id===id?{...x,available:!x.available}:x))} g={g}/>;
   if(screen==="quran")return <QuranScreen onBack={()=>setScreen("home")} g={g}/>;
-  if(screen==="category"&&selCat)return <CatScreen catId={selCat} onBack={()=>{setScreen("home");setSelCat(null);}} shops={shops} onSelect={s=>setSelShop(s)} g={g} favorites={favorites} toggleFav={toggleFav} area={selArea} setArea={setSelArea} lang={lang}/>;
-  if(screen==="settings")return <SettingsScreen onBack={()=>setScreen("home")} dark={dark} setDark={setDark} lang={lang} setLang={setLang} g={g} onDelete={()=>{setShops([]);setDoctors([]);setDrivers([]);setChats({});setScreen("home");}}/>;
+  if(screen==="category"&&selCat)return <CatScreen catId={selCat} onBack={()=>{setScreen("home");setSelCat(null);}} shops={shops} onSelect={s=>setSelShop(s)} g={g} favorites={favorites} toggleFav={toggleFav} lang={lang}/>;
+  if(screen==="settings")return <SettingsScreen onBack={()=>setScreen("home")} dark={dark} setDark={setDark} lang={lang} setLang={setLang} g={g} onDelete={()=>{setShops([]);setDoctors([]);setDrivers([]);setChats({});setScanPreview("");setScreen("home");}}/>;
   if(screen==="admin")return <AdminScreen onBack={()=>setScreen("home")} shops={shops} onApprove={approveP} onReject={rejectP} reports={reports} g={g}/>;
   if(screen==="favorites")return <FavScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} onSelect={s=>setSelShop(s)} g={g} toggleFav={toggleFav}/>;
   if(screen==="offers")return <OffersScreen onBack={()=>setScreen("home")} shops={shops} g={g} lang={lang}/>;
@@ -1234,7 +1389,7 @@ export default function DzShop(){
       <div style={{background:g.card,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${g.border}`,position:"sticky",top:0,zIndex:100,boxShadow:g.sh}}>
         <div onClick={()=>setScreen("profile")} style={{cursor:"pointer"}}>
           <div style={{fontSize:20,fontWeight:900,background:"linear-gradient(135deg,#f0a500,#ff6b35)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>DzShop 🛍️</div>
-          <div style={{fontSize:11,color:g.t2}}>📍 {lang==="fr"?"Oum El Bouaghi":"أم البواقي"}</div>
+          <div style={{fontSize:11,color:g.t2}}>📍 {u.allAreas}</div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <button onClick={()=>setLang(l=>l==="ar"?"fr":"ar")} style={{background:g.bg3,border:`1px solid ${g.border}`,borderRadius:12,padding:"4px 8px",color:g.accent,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:g.fn}}>
@@ -1253,9 +1408,17 @@ export default function DzShop(){
       <div style={{padding:"10px 14px",background:g.bg2,borderBottom:`1px solid ${g.border}`}}>
         <div style={{display:"flex",gap:8}}>
           <input placeholder={u.searchPh} value={searchQ}
-            onChange={e=>{setSearchQ(e.target.value);setScreen(e.target.value?"search":"home");}}
+            onChange={e=>{setSearchQ(e.target.value);setScreen(e.target.value||scanPreview?"search":"home");}}
             style={{flex:1,background:g.bg,border:`1px solid ${g.border}`,borderRadius:14,padding:"10px 16px",color:g.text,fontFamily:g.fn,fontSize:14,boxSizing:"border-box"}}/>
-          <button onClick={handleScan} style={{background:scanning?"linear-gradient(135deg,#00ff88,#00cc66)":"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:"0 16px",color:"#fff",fontSize:20,cursor:"pointer"}}>
+          <input
+            ref={scanInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleImageScan}
+            style={{display:"none"}}
+          />
+          <button type="button" onClick={()=>scanInputRef.current?.click()} style={{background:scanning?"linear-gradient(135deg,#00ff88,#00cc66)":"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:14,padding:"0 16px",color:"#fff",fontSize:20,cursor:"pointer"}}>
             {scanning?"⏳":"📷"}
           </button>
         </div>
@@ -1336,10 +1499,25 @@ export default function DzShop(){
 
       {screen==="search"&&(
         <div style={{padding:"14px 14px 100px"}}>
+          {scanPreview&&(
+            <div style={{display:"flex",alignItems:"center",gap:10,background:g.card,padding:10,borderRadius:14,marginBottom:12,border:`1px solid ${g.border}`}}>
+              <img src={scanPreview} alt="" style={{width:52,height:52,objectFit:"cover",borderRadius:10}}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700}}>{u.photoSearchTitle}</div>
+                <div style={{fontSize:11,color:g.t2}}>{u.photoSearchSub}</div>
+              </div>
+              <button onClick={()=>{setScanPreview("");setSearchQ("");}} style={{background:g.bg3,border:"none",borderRadius:8,padding:"4px 8px",color:g.t2,cursor:"pointer"}}>✕</button>
+            </div>
+          )}
           <div style={{fontSize:13,color:g.t2,marginBottom:12}}>"{searchQ}" — {srch.length}</div>
           {srch.map(shop=>{
             const cat=CATS.find(c=>c.id===shop.category);
-            const matched=shop.products.filter(p=>p.name.includes(searchQ)&&(!p.status||p.status==="approved"));
+            const matched=shop.products.filter(p=>{
+              const ok=!p.status||p.status==="approved";
+              if(!ok)return false;
+              if(!qLower)return true;
+              return p.name.toLowerCase().includes(qLower);
+            });
             return(
               <div key={shop.id} onClick={()=>setSelShop(shop)}
                 style={{background:g.card,borderRadius:18,padding:14,marginBottom:12,border:`1px solid ${g.border}`,cursor:"pointer",boxShadow:g.sh}}>
@@ -1364,7 +1542,7 @@ export default function DzShop(){
 
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:g.card,borderTop:`1px solid ${g.border}`,padding:"8px 0 14px",display:"flex",justifyContent:"space-around",boxShadow:g.sh}}>
         {[
-          {icon:"🏠",label:u.navHome,action:()=>{setScreen("home");setSelCat(null);setSearchQ("");}},
+          {icon:"🏠",label:u.navHome,action:()=>{setScreen("home");setSelCat(null);setSearchQ("");setScanPreview("");}},
           {icon:"🔍",label:u.navSearch,action:()=>setScreen("search")},
           {icon:"🏷️",label:u.navOffers,action:()=>setScreen("offers")},
           {icon:"❤️",label:u.navFav,action:()=>setScreen("favorites")},
