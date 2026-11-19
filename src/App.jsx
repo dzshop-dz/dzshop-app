@@ -104,7 +104,7 @@ const UI = {
     back: "Retour →",
     da: "DA",
     cityLabel: "Oum El Bouaghi",
-    allAreas: "Tous les lieux",
+    allAreas: "Tous les quartiers",
     areaPh: "Votre quartier / ville / lieu (ex: Aïn Fakroun, Centre) *",
     searchPh: "🔍 Rechercher produit, boutique ou quartier...",
     scanning: "🤖 Analyse de l'image et recherche...",
@@ -595,7 +595,7 @@ function DelivModal({shop,onClose,g}){
   );
 }
 
-function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedProducts,toggleLikeProduct,savedProducts,toggleSaveProduct,onChat,addPts,lang="ar"}){
+function ShopDetail({shop,canManageShop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedProducts,toggleLikeProduct,savedProducts,toggleSaveProduct,onChat,addPts,lang="ar"}){
   const u=UI[lang]||UI.ar;
   const cat=CATS.find(c=>c.id===shop.category);
   const[products,setProducts]=useState(shop.products||[]);
@@ -619,6 +619,7 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedPr
   const approved=products.filter(p=>!p.status||p.status==="approved");
   const discountedList=approved.filter(p=>Number(p.discount)>0);
   const addProd=p=>{const uList=[...products,p];setProducts(uList);onUpdate({...shop,products:uList});};
+  const deleteProd=pid=>{const uList=products.filter(item=>item.id!==pid);setProducts(uList);onUpdate({...shop,products:uList});};
   const subscribePro=()=>{onUpdate({...shop,plan:"premium"});};
   const addRev=r=>{const uList=[...reviews,r];setReviews(uList);onUpdate({...shop,reviews:uList});};
   const addProdComment=(pid,c)=>{const uList=products.map(p=>p.id===pid?{...p,comments:[...(p.comments||[]),c]}:p);setProducts(uList);onUpdate({...shop,products:uList});};
@@ -660,6 +661,11 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedPr
           </button>
           <button onClick={()=>setCommProd(p.id)} style={{flex:1,background:g.bg3,border:"none",borderRadius:12,padding:"8px",color:g.text,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>💬 ({(p.comments||[]).length})</button>
           <button onClick={()=>onChat(shop,`السلام عليكم، نحب نسأل على: ${p.name}`)} style={{flex:1,background:"linear-gradient(135deg,#06b6d4,#0284c7)",border:"none",borderRadius:12,padding:"8px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>{u.askShop}</button>
+          {canManageShop&&(
+            <button type="button" onClick={()=>deleteProd(p.id)} style={{background:"#ff444422",border:"1px solid #ff4444",borderRadius:12,padding:"8px 10px",color:"#ff4444",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:g.fn}}>
+              🗑️
+            </button>
+          )}
         </div>
       </div>
     );
@@ -667,7 +673,7 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedPr
 
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir}}>
-      {showAdd&&<AddProductModal onClose={()=>setShowAdd(false)} onAdd={addProd} onSubscribePro={subscribePro} isPro={shop.plan==="premium"} count={products.length} defaultDiscount={defaultDisc} g={g} lang={lang}/>}
+      {showAdd&&canManageShop&&<AddProductModal onClose={()=>setShowAdd(false)} onAdd={addProd} onSubscribePro={subscribePro} isPro={shop.plan==="premium"} count={products.length} defaultDiscount={defaultDisc} g={g} lang={lang}/>}
       {showRev&&<RevModal onClose={()=>setShowRev(false)} onSubmit={addRev} g={g} addPts={addPts}/>}
       {showDeliv&&<DelivModal shop={shop} onClose={()=>setShowDeliv(false)} g={g}/>}
       {commProd&&products.find(x=>x.id===commProd)&&<ProdCommentsModal prod={products.find(x=>x.id===commProd)} onClose={()=>setCommProd(null)} onAdd={addProdComment} g={g}/>}
@@ -740,10 +746,12 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedPr
         :approved.map(renderPostCard))}
 
         {tab==="discounts"&&(<>
-          <button onClick={()=>{setDefaultDisc(20);setShowAdd(true);}}
-            style={{width:"100%",background:"linear-gradient(135deg,#ff6b35,#f0a500)",border:"none",borderRadius:14,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:g.fn,marginBottom:12}}>
-            {u.addDiscountBtn}
-          </button>
+          {canManageShop&&(
+            <button onClick={()=>{setDefaultDisc(20);setShowAdd(true);}}
+              style={{width:"100%",background:"linear-gradient(135deg,#ff6b35,#f0a500)",border:"none",borderRadius:14,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:g.fn,marginBottom:12}}>
+              {u.addDiscountBtn}
+            </button>
+          )}
           {discountedList.length===0?
             <div style={{textAlign:"center",padding:"40px 20px",color:g.t2}}><div style={{fontSize:44,marginBottom:10}}>🏷️</div><div>{u.noDiscounts}</div></div>
           :discountedList.map(renderPostCard)}
@@ -772,10 +780,12 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedPr
         </>)}
       </div>
 
-      <button onClick={()=>{setDefaultDisc(0);setShowAdd(true);}}
-        style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:20,padding:"13px 26px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn,boxShadow:"0 4px 20px #f0a50066",width:"calc(100% - 80px)",maxWidth:280}}>
-        {u.addPostBtn}
-      </button>
+      {canManageShop&&(
+        <button onClick={()=>{setDefaultDisc(0);setShowAdd(true);}}
+          style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#f0a500,#e67e00)",border:"none",borderRadius:20,padding:"13px 26px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:g.fn,boxShadow:"0 4px 20px #f0a50066",width:"calc(100% - 80px)",maxWidth:280}}>
+          {u.addPostBtn}
+        </button>
+      )}
     </div>
   );
 }
@@ -1448,6 +1458,9 @@ export default function DzShop(){
   const[shops,setShops]=useState(()=>{
     try{const s=localStorage.getItem("dzshop_shops");return s?JSON.parse(s):[];}catch{return[];}
   });
+  const[ownedShopIds,setOwnedShopIds]=useState(()=>{
+    try{const s=localStorage.getItem("dzshop_owned_shops");return s?JSON.parse(s):[];}catch{return[];}
+  });
   const[doctors,setDoctors]=useState([]);
   const[drivers,setDrivers]=useState([]);
   const[favorites,setFavorites]=useState(()=>{
@@ -1462,7 +1475,6 @@ export default function DzShop(){
   const[reports,setReports]=useState([]);
   const[points,setPoints]=useState(0);
 
-  // المزامنة الحية مع Firebase Firestore
   useEffect(()=>{
     const unsub=onSnapshot(
       collection(db,"shops"),
@@ -1481,6 +1493,10 @@ export default function DzShop(){
   useEffect(()=>{
     try{localStorage.setItem("dzshop_shops",JSON.stringify(shops));}catch{}
   },[shops]);
+
+  useEffect(()=>{
+    try{localStorage.setItem("dzshop_owned_shops",JSON.stringify(ownedShopIds));}catch{}
+  },[ownedShopIds]);
 
   useEffect(()=>{
     try{localStorage.setItem("dzshop_favs",JSON.stringify(favorites));}catch{}
@@ -1570,7 +1586,7 @@ export default function DzShop(){
   const currentSelShop=selShop?(shops.find(s=>s.id===selShop.id)||selShop):null;
 
   if(chatShop)return <ChatScreen key={chatShop.id} shop={chatShop} msgs={chats[chatShop.id]||[]} initial={chatInit} onSend={txt=>sendChat(chatShop.id,txt)} onBack={()=>{setChatShop(null);setChatInit("");}} g={g}/>;
-  if(currentSelShop)return <ShopDetail shop={currentSelShop} onBack={()=>setSelShop(null)} onUpdate={updShop} onReport={addReport} g={g} favorites={favorites} toggleFav={toggleFav} likedProducts={likedProducts} toggleLikeProduct={toggleLikeProduct} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} addPts={addPts} lang={lang}/>;
+  if(currentSelShop)return <ShopDetail shop={currentSelShop} canManageShop={ownedShopIds.includes(currentSelShop.id)} onBack={()=>setSelShop(null)} onUpdate={updShop} onReport={addReport} g={g} favorites={favorites} toggleFav={toggleFav} likedProducts={likedProducts} toggleLikeProduct={toggleLikeProduct} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} addPts={addPts} lang={lang}/>;
   if(screen==="messages")return <MessagesScreen onBack={()=>setScreen("home")} shops={shops} chats={chats} onOpen={sh=>{setChatInit("");setChatShop(sh);}} g={g}/>;
   if(screen==="realestate")return <REScreen onBack={()=>setScreen("home")} g={g}/>;
   if(screen==="doctor")return <DoctorScreen onBack={()=>setScreen("home")} doctors={doctors} onAdd={d=>setDoctors([...doctors,d])} g={g}/>;
@@ -1579,7 +1595,7 @@ export default function DzShop(){
   if(screen==="delivery")return <DeliveryScreen onBack={()=>setScreen("home")} drivers={drivers} onAdd={d=>setDrivers([d,...drivers])} onToggle={id=>setDrivers(ds=>ds.map(x=>x.id===id?{...x,available:!x.available}:x))} g={g}/>;
   if(screen==="quran")return <QuranScreen onBack={()=>setScreen("home")} g={g}/>;
   if(screen==="category"&&selCat)return <CatScreen catId={selCat} onBack={()=>{setScreen("home");setSelCat(null);}} shops={shops} onSelect={s=>setSelShop(s)} g={g} favorites={favorites} toggleFav={toggleFav} likedProducts={likedProducts} toggleLikeProduct={toggleLikeProduct} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} lang={lang}/>;
-  if(screen==="settings")return <SettingsScreen onBack={()=>setScreen("home")} dark={dark} setDark={setDark} lang={lang} setLang={setLang} g={g} onDelete={()=>{setShops([]);setDoctors([]);setDrivers([]);setChats({});setSavedProducts([]);setLikedProducts([]);setScanPreview("");setScreen("home");}}/>;
+  if(screen==="settings")return <SettingsScreen onBack={()=>setScreen("home")} dark={dark} setDark={setDark} lang={lang} setLang={setLang} g={g} onDelete={()=>{setShops([]);setOwnedShopIds([]);setDoctors([]);setDrivers([]);setChats({});setSavedProducts([]);setLikedProducts([]);setScanPreview("");setScreen("home");}}/>;
   if(screen==="admin")return <AdminScreen onBack={()=>setScreen("home")} shops={shops} onApprove={approveP} onReject={rejectP} reports={reports} g={g}/>;
   if(screen==="favorites")return <FavScreen onBack={()=>setScreen("home")} shops={shops} favorites={favorites} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onSelect={s=>setSelShop(s)} g={g} toggleFav={toggleFav} lang={lang}/>;
   if(screen==="offers")return <OffersScreen onBack={()=>setScreen("home")} shops={shops} g={g} lang={lang}/>;
@@ -1589,7 +1605,7 @@ export default function DzShop(){
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,maxWidth:430,margin:"0 auto",transition:"all 0.3s"}}>
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-      {showReg&&<RegShopModal onClose={()=>setShowReg(false)} onReg={s=>{setShops([...shops,s]);syncShopToCloud(s);setShowReg(false);}} g={g} lang={lang}/>}
+      {showReg&&<RegShopModal onClose={()=>setShowReg(false)} onReg={s=>{setShops([...shops,s]);setOwnedShopIds(prev=>[...prev,s.id]);syncShopToCloud(s);setShowReg(false);}} g={g} lang={lang}/>}
 
       {showNotifs&&(
         <div style={{position:"fixed",inset:0,background:"#000b",zIndex:998,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
