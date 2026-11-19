@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { db } from "./firebase";
+import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 const FREE_POSTS_LIMIT = 10;
 
@@ -30,7 +32,8 @@ const UI = {
   ar: {
     back: "← رجوع",
     da: "دج",
-    allAreas: "أم البواقي",
+    cityLabel: "أم البواقي",
+    allAreas: "كل الأحياء",
     areaPh: "اكتب حيك / مدينتك / مكانك (مثال: عين فكرون، المركز) *",
     searchPh: "🔍 ابحث عن منتج، محل أو حي...",
     scanning: "🤖 جاري تحليل الصورة والبحث في المحلات...",
@@ -66,7 +69,6 @@ const UI = {
     savedTab: "🔖 المحفوظات",
     saveBtn: "حفظ",
     savedBtn: "محفوظ",
-    likeBtn: "إعجاب",
     addPostBtn: "➕ أضف منشور",
     addDiscountBtn: "🏷️ أضف تخفيض",
     noPosts: "ما كاين منشور بعد",
@@ -101,7 +103,8 @@ const UI = {
   fr: {
     back: "Retour →",
     da: "DA",
-    allAreas: "Oum El Bouaghi",
+    cityLabel: "Oum El Bouaghi",
+    allAreas: "Tous les lieux",
     areaPh: "Votre quartier / ville / lieu (ex: Aïn Fakroun, Centre) *",
     searchPh: "🔍 Rechercher produit, boutique ou quartier...",
     scanning: "🤖 Analyse de l'image et recherche...",
@@ -137,7 +140,6 @@ const UI = {
     savedTab: "🔖 Enregistrés",
     saveBtn: "Enregistrer",
     savedBtn: "Enregistré",
-    likeBtn: "J'aime",
     addPostBtn: "➕ Publier",
     addDiscountBtn: "🏷️ Ajouter promo",
     noPosts: "Aucune publication pour le moment",
@@ -171,7 +173,7 @@ const UI = {
   },
 };
 
-function compressImage(file, maxWidth = 800, quality = 0.78) {
+function compressImage(file, maxWidth = 520, quality = 0.65) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -606,6 +608,12 @@ function ShopDetail({shop,onBack,onUpdate,onReport,g,favorites,toggleFav,likedPr
   const[reported,setReported]=useState(false);
   const[commProd,setCommProd]=useState(null);
   const[galleryImgs,setGalleryImgs]=useState(null);
+
+  useEffect(()=>{
+    setProducts(shop.products||[]);
+    setReviews(shop.reviews||[]);
+  },[shop]);
+
   const isFav=favorites.includes(shop.id);
   const avg=reviews.length?(reviews.reduce((a,r)=>a+r.stars,0)/reviews.length).toFixed(1):shop.rating;
   const approved=products.filter(p=>!p.status||p.status==="approved");
@@ -777,7 +785,7 @@ function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,likedProdu
   const cat=CATS.find(c=>c.id===catId);
   const[area,setArea]=useState("ALL");
   const[fDeliv,setFDeliv]=useState(false);
-  const[catTab,setCatTab]=useState("posts"); // posts | discounts | shops
+  const[catTab,setCatTab]=useState("posts");
   const[galleryImgs,setGalleryImgs]=useState(null);
 
   const catShops=shops.filter(s=>s.category===catId);
@@ -885,7 +893,6 @@ function CatScreen({catId,onBack,shops,onSelect,g,favorites,toggleFav,likedProdu
           ))}
         </div>
 
-        {/* تبويبات القسم: المنشورات | التخفيضات | المحلات */}
         <div style={{display:"flex",borderTop:`1px solid ${g.border}`}}>
           {[
             ["posts",`${u.postsTab} (${allCatPosts.length})`],
@@ -1147,7 +1154,7 @@ function NewScreen({onBack,shops,onSelect,g}){
 
 function FavScreen({onBack,shops,favorites,savedProducts,toggleSaveProduct,onSelect,g,toggleFav,lang="ar"}){
   const u=UI[lang]||UI.ar;
-  const[favTab,setFavTab]=useState("saved"); // saved | shops
+  const[favTab,setFavTab]=useState("saved");
   const favShops=shops.filter(s=>favorites.includes(s.id));
   const savedItems=shops.flatMap(s=>
     (s.products||[])
@@ -1437,14 +1444,65 @@ export default function DzShop(){
 
   const[showReg,setShowReg]=useState(false);
   const[showNotifs,setShowNotifs]=useState(false);
-  const[shops,setShops]=useState([]);
+
+  const[shops,setShops]=useState(()=>{
+    try{const s=localStorage.getItem("dzshop_shops");return s?JSON.parse(s):[];}catch{return[];}
+  });
   const[doctors,setDoctors]=useState([]);
   const[drivers,setDrivers]=useState([]);
-  const[favorites,setFavorites]=useState([]);
-  const[likedProducts,setLikedProducts]=useState([]);
-  const[savedProducts,setSavedProducts]=useState([]);
+  const[favorites,setFavorites]=useState(()=>{
+    try{const s=localStorage.getItem("dzshop_favs");return s?JSON.parse(s):[];}catch{return[];}
+  });
+  const[likedProducts,setLikedProducts]=useState(()=>{
+    try{const s=localStorage.getItem("dzshop_likes");return s?JSON.parse(s):[];}catch{return[];}
+  });
+  const[savedProducts,setSavedProducts]=useState(()=>{
+    try{const s=localStorage.getItem("dzshop_saved");return s?JSON.parse(s):[];}catch{return[];}
+  });
   const[reports,setReports]=useState([]);
   const[points,setPoints]=useState(0);
+
+  // المزامنة الحية مع Firebase Firestore
+  useEffect(()=>{
+    const unsub=onSnapshot(
+      collection(db,"shops"),
+      (snap)=>{
+        const cloudShops=snap.docs.map(d=>d.data());
+        if(cloudShops.length>0){
+          setShops(cloudShops);
+          try{localStorage.setItem("dzshop_shops",JSON.stringify(cloudShops));}catch{}
+        }
+      },
+      ()=>{}
+    );
+    return ()=>unsub();
+  },[]);
+
+  useEffect(()=>{
+    try{localStorage.setItem("dzshop_shops",JSON.stringify(shops));}catch{}
+  },[shops]);
+
+  useEffect(()=>{
+    try{localStorage.setItem("dzshop_favs",JSON.stringify(favorites));}catch{}
+  },[favorites]);
+
+  useEffect(()=>{
+    try{localStorage.setItem("dzshop_likes",JSON.stringify(likedProducts));}catch{}
+  },[likedProducts]);
+
+  useEffect(()=>{
+    try{localStorage.setItem("dzshop_saved",JSON.stringify(savedProducts));}catch{}
+  },[savedProducts]);
+
+  const syncShopToCloud=async(shopObj)=>{
+    try{
+      const sanitized={
+        ...shopObj,
+        products:(shopObj.products||[]).map(p=>({...p,videoUrl:""})),
+      };
+      await setDoc(doc(db,"shops",String(shopObj.id)),sanitized,{merge:true});
+    }catch{}
+  };
 
   const NOTIFS=[
     {icon:"🔔",title:lang==="fr"?"Bienvenue sur DzShop !":"مرحباً في DzShop!",body:lang==="fr"?"Inscrivez votre boutique avec votre propre quartier":"سجّلي محلك واكتبي مكانك وحيك بنفسك",time:lang==="fr"?"Maintenant":"الآن"},
@@ -1461,9 +1519,27 @@ export default function DzShop(){
   const toggleSaveProduct=id=>setSavedProducts(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
   const addReport=id=>setReports(p=>[...p,id]);
   const addPts=n=>setPoints(p=>p+n);
-  const updShop=uShop=>{setShops(s=>s.map(sh=>sh.id===uShop.id?uShop:sh));if(selShop?.id===uShop.id)setSelShop(uShop);};
-  const approveP=(sid,pid)=>setShops(s=>s.map(sh=>sh.id===sid?{...sh,products:sh.products.map(p=>p.id===pid?{...p,status:"approved"}:p)}:sh));
-  const rejectP=(sid,pid)=>setShops(s=>s.map(sh=>sh.id===sid?{...sh,products:sh.products.filter(p=>p.id!==pid)}:sh));
+  const updShop=uShop=>{
+    setShops(s=>s.map(sh=>sh.id===uShop.id?uShop:sh));
+    if(selShop?.id===uShop.id)setSelShop(uShop);
+    syncShopToCloud(uShop);
+  };
+  const approveP=(sid,pid)=>{
+    setShops(s=>s.map(sh=>{
+      if(sh.id!==sid)return sh;
+      const updated={...sh,products:sh.products.map(p=>p.id===pid?{...p,status:"approved"}:p)};
+      syncShopToCloud(updated);
+      return updated;
+    }));
+  };
+  const rejectP=(sid,pid)=>{
+    setShops(s=>s.map(sh=>{
+      if(sh.id!==sid)return sh;
+      const updated={...sh,products:sh.products.filter(p=>p.id!==pid)};
+      syncShopToCloud(updated);
+      return updated;
+    }));
+  };
 
   const handleImageScan=(e)=>{
     const file=e.target.files?.[0];
@@ -1491,9 +1567,10 @@ export default function DzShop(){
     );
   });
   const pendCnt=shops.reduce((a,s)=>a+s.products.filter(p=>p.status==="pending").length,0);
+  const currentSelShop=selShop?(shops.find(s=>s.id===selShop.id)||selShop):null;
 
   if(chatShop)return <ChatScreen key={chatShop.id} shop={chatShop} msgs={chats[chatShop.id]||[]} initial={chatInit} onSend={txt=>sendChat(chatShop.id,txt)} onBack={()=>{setChatShop(null);setChatInit("");}} g={g}/>;
-  if(selShop)return <ShopDetail shop={selShop} onBack={()=>setSelShop(null)} onUpdate={updShop} onReport={addReport} g={g} favorites={favorites} toggleFav={toggleFav} likedProducts={likedProducts} toggleLikeProduct={toggleLikeProduct} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} addPts={addPts} lang={lang}/>;
+  if(currentSelShop)return <ShopDetail shop={currentSelShop} onBack={()=>setSelShop(null)} onUpdate={updShop} onReport={addReport} g={g} favorites={favorites} toggleFav={toggleFav} likedProducts={likedProducts} toggleLikeProduct={toggleLikeProduct} savedProducts={savedProducts} toggleSaveProduct={toggleSaveProduct} onChat={(s,txt)=>{setChatInit(txt||"");setChatShop(s);}} addPts={addPts} lang={lang}/>;
   if(screen==="messages")return <MessagesScreen onBack={()=>setScreen("home")} shops={shops} chats={chats} onOpen={sh=>{setChatInit("");setChatShop(sh);}} g={g}/>;
   if(screen==="realestate")return <REScreen onBack={()=>setScreen("home")} g={g}/>;
   if(screen==="doctor")return <DoctorScreen onBack={()=>setScreen("home")} doctors={doctors} onAdd={d=>setDoctors([...doctors,d])} g={g}/>;
@@ -1512,7 +1589,7 @@ export default function DzShop(){
   return(
     <div style={{minHeight:"100vh",background:g.bg,color:g.text,fontFamily:g.fn,direction:g.dir,maxWidth:430,margin:"0 auto",transition:"all 0.3s"}}>
       <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-      {showReg&&<RegShopModal onClose={()=>setShowReg(false)} onReg={s=>{setShops([...shops,s]);setShowReg(false);}} g={g} lang={lang}/>}
+      {showReg&&<RegShopModal onClose={()=>setShowReg(false)} onReg={s=>{setShops([...shops,s]);syncShopToCloud(s);setShowReg(false);}} g={g} lang={lang}/>}
 
       {showNotifs&&(
         <div style={{position:"fixed",inset:0,background:"#000b",zIndex:998,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
@@ -1534,7 +1611,7 @@ export default function DzShop(){
       <div style={{background:g.card,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${g.border}`,position:"sticky",top:0,zIndex:100,boxShadow:g.sh}}>
         <div onClick={()=>setScreen("profile")} style={{cursor:"pointer"}}>
           <div style={{fontSize:20,fontWeight:900,background:"linear-gradient(135deg,#f0a500,#ff6b35)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>DzShop 🛍️</div>
-          <div style={{fontSize:11,color:g.t2}}>📍 {u.allAreas}</div>
+          <div style={{fontSize:11,color:g.t2}}>📍 {u.cityLabel}</div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <button onClick={()=>setLang(l=>l==="ar"?"fr":"ar")} style={{background:g.bg3,border:`1px solid ${g.border}`,borderRadius:12,padding:"4px 8px",color:g.accent,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:g.fn}}>
