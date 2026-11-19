@@ -30,7 +30,7 @@ const UI = {
   ar: {
     back: "← رجوع",
     da: "دج",
-    allAreas: "كل الأحياء",
+    allAreas: "أم البواقي",
     areaPh: "اكتب حيك / مدينتك / مكانك (مثال: عين فكرون، المركز) *",
     searchPh: "🔍 ابحث عن منتج، محل أو حي...",
     scanning: "🤖 جاري تحليل الصورة والبحث في المحلات...",
@@ -101,7 +101,7 @@ const UI = {
   fr: {
     back: "Retour →",
     da: "DA",
-    allAreas: "Tous les lieux",
+    allAreas: "Oum El Bouaghi",
     areaPh: "Votre quartier / ville / lieu (ex: Aïn Fakroun, Centre) *",
     searchPh: "🔍 Rechercher produit, boutique ou quartier...",
     scanning: "🤖 Analyse de l'image et recherche...",
