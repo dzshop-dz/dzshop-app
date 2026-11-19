@@ -1,0 +1,74 @@
+
+import React, { useState } from "react";
+
+export default function ProductItem({ product }) {
+const [likes, setLikes] = useState(product.likes || 0);
+const [isLiked, setIsLiked] = useState(false);
+const [comments, setComments] = useState(product.comments || []);
+const [newComment, setNewComment] = useState("");
+
+// دالة زر الإعجاب (Like)
+const handleLike = () => {
+if (isLiked) {
+setLikes(likes - 1);
+setIsLiked(false);
+} else {
+setLikes(likes + 1);
+setIsLiked(true);
+}
+};
+
+// دالة إضافة تعليق
+const handleAddComment = (e) => {
+e.preventDefault();
+if (!newComment.trim()) return;
+setComments([...comments, newComment]);
+setNewComment("");
+};
+
+return (
+<div style={{ background: "#fff", padding: "15px", borderRadius: "10px", marginBottom: "15px", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
+<h3>{product.name}</h3>
+<p style={{ color: "#666" }}>{product.description}</p>
+<p style={{ fontWeight: "bold", color: "#ff9800" }}>السعر: {product.price} دج</p>
+
+{/* تفاعل اللايك */}
+<div style={{ display: "flex", gap: "15px", alignItems: "center", margin: "10px 0" }}>
+<button 
+onClick={handleLike}
+style={{ background: isLiked ? "#ff4757" : "#f1f2f6", color: isLiked ? "#fff" : "#333", border: "none", padding: "6px 12px", borderRadius: "20px", cursor: "pointer", fontWeight: "bold" }}
+>
+❤️ {likes} إعجاب
+</button>
+</div>
+
+{/* قسم التعليقات */}
+<div style={{ borderTop: "1px solid #eee", paddingTop: "10px", marginTop: "10px" }}>
+<h4>التعليقات:</h4>
+{comments.length === 0 ? (
+<p style={{ fontSize: "13px", color: "#999" }}>لا توجد تعليقات بعد، كن أول من يعلق!</p>
+) : (
+comments.map((comment, index) => (
+<p key={index} style={{ background: "#f8f9fa", padding: "6px 10px", borderRadius: "5px", fontSize: "14px", margin: "5px 0" }}>
+{comment}
+</p>
+))
+)}
+
+{/* نموذج إضافة تعليق جديد */}
+<form onSubmit={handleAddComment} style={{ display: "flex", gap: "5px", marginTop: "10px" }}>
+<input 
+type="text" 
+placeholder="اكتب تعليقاً..." 
+value={newComment}
+onChange={(e) => setNewComment(e.target.value)}
+style={{ flex: 1, padding: "6px", borderRadius: "5px", border: "1px solid #ddd" }}
+/>
+<button type="submit" style={{ background: "#2ed573", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "5px", cursor: "pointer" }}>
+إرسال
+</button>
+</form>
+</div>
+</div>
+);
+}
